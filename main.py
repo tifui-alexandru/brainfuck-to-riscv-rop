@@ -2,7 +2,6 @@ from bf_parser import *
 
 p = BF_Parser("><")
 
-offset = ""
-offset = bytes(input("Please provide offset until stack smash:\n"), 'utf-8')
+offset = b"A" * 23 # offset until stack smash ; added for debugging
 
 print(offset + p.parse())
