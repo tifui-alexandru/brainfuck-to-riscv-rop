@@ -37,19 +37,28 @@ class BF_Parser():
 
         for instruction in self.__bf_code:
             if instruction == '>':
-                pass
+                self.__construct_charger(ra=self.__move_a3.get_vaddr(), s1=0x8, s4=self.__charger.get_vaddr())
+                rop_chain += self.__charger.print_gadget()
+
             elif instruction == '<':
-                pass
+                self.__construct_charger(ra=self.__move_a3.get_vaddr(), s1=-0x8, s4=self.__charger.get_vaddr())
+                rop_chain += self.__charger.print_gadget()
+
             elif instruction == '+':
                 pass
+
             elif instruction == '-':
                 pass
+
             elif instruction == '.':
                 pass
+
             elif instruction == ',':
                 pass
+
             elif instruction == '[':
                 pass
+
             elif instruction == ']':
                 pass
 
