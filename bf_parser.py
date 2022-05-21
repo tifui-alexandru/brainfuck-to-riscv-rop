@@ -8,6 +8,7 @@ class BF_Parser():
         self.__charger = Charger()
         self.__init_a3 = InitializeA3()
         self.__move_a3 = MoveA3()
+        self.__load_a1 = LoadA1()
 
     def __construct_charger(self, ra=0, \
                                   s0=0, \
@@ -46,7 +47,9 @@ class BF_Parser():
                 rop_chain += self.__charger.print_gadget()
 
             elif instruction == '+':
-                pass
+                # just for debugging
+                self.__construct_charger(ra=self.__load_a1.get_vaddr(), s0=self.__charger.get_vaddr() - 0x30)
+                rop_chain += self.__charger.print_gadget()
 
             elif instruction == '-':
                 pass

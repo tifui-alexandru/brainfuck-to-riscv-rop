@@ -65,3 +65,52 @@ class MoveA3(Gadget):
     '''
     def __init__(self):
         super().__init__(0x2a1f4)
+
+class LoadA1(Gadget):
+    '''
+    lw a1, 0x54(a3)
+    lw a0, 0x5c(a3)
+    addi s1, sp, 0x34c
+    addi a3, sp, 0x1ec
+    jal	a4, 0x30(s0)
+    '''
+    def __init__(self):
+        super().__init__(0x1862b)
+
+class StoreA1(Gadget):
+    '''
+    fsd fa1, 0x48(a3)
+    jalr sp, -0x794(a5)
+    '''
+    def __init__(self):
+        super().__init__(0x22b3d)
+
+class IncrementA1(Gadget):
+    '''
+    addi a1, s0, 0x10
+    jalr s3
+    '''
+    def __init__(self):
+        super().__init__(0x2395e)
+
+class InitializeA2(Gadget):
+    '''
+    mv a2, s6
+    beqz s2, 0x1e
+    jalr s7
+    '''
+    def __init__(self):
+        super().__init__(0x1440e)
+
+class InitializeA5_A7(Gadget):
+    '''
+    mv a5, s6
+    mv a7, s5
+    li a6, 0
+    li a4, 0
+    mv a3, s7
+    addi a2, sp, 0x40
+    jalr s4
+    '''
+    def __init__(self):
+        super().__init__(0x2917c)
