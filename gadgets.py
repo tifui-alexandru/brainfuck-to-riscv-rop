@@ -30,7 +30,7 @@ class Charger(Gadget):
     '''
 
     def __init__(self):
-        super().__init__(0x12222)
+        super().__init__(0x12232)
         self.__stack_frame = None
 
     def set_stack_frame(self, stack_frame):
@@ -54,7 +54,7 @@ class InitializeA3(Gadget):
     jalr s4
     '''
     def __init__(self):
-        super().__init__(0x25d6a)
+        super().__init__(0x260f6)
 
 class MoveA3(Gadget):
     '''
@@ -64,4 +64,4 @@ class MoveA3(Gadget):
     jalr s4
     '''
     def __init__(self):
-        super().__init__(0x29e68)
+        super().__init__(0x2a1f4)
