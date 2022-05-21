@@ -33,7 +33,8 @@ class BF_Parser():
         initial_value = 0x41414141 # for debugging
         self.__construct_charger(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=initial_value)
 
-        rop_chain = self.__charger.print_gadget()
+        rop_chain = self.__charger.print_vaddr() # charger address that overrides $ra
+        rop_chain += self.__charger.print_gadget() # charger frame
 
         for instruction in self.__bf_code:
             if instruction == '>':

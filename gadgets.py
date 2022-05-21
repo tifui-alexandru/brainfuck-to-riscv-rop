@@ -7,9 +7,6 @@ class Gadget():
     def get_vaddr(self):
         return self.__vaddr
 
-    def print_gadget(self):
-        return struct.pack("q", self.__vaddr)
-
 class Charger(Gadget):
     '''
     ld ra, 0x1a8(sp)
@@ -36,8 +33,11 @@ class Charger(Gadget):
     def set_stack_frame(self, stack_frame):
         self.__stack_frame = stack_frame
 
+    def print_vaddr(self):
+        return struct.pack("q", self.get_vaddr())
+
     def print_gadget(self):
-        ans = super().print_gadget()
+        ans = b""
 
         if self.__stack_frame is None:
             print("[Error] no stack frame given for charger")
