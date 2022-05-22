@@ -6,12 +6,13 @@ class BF_Parser():
         self.__bf_code = bf_code
 
         # get gadget objects
-        self.__charger  = Charger()
-        self.__init_a3  = InitializeA3()
-        self.__move_a3  = MoveA3()
-        self.__load_s0  = LoadS0()
-        self.__inc_s0   = IncrementS0()
-        self.__store_s0 = StoreS0()
+        self.__charger   = Charger()
+        self.__init_a3   = InitializeA3()
+        self.__move_a3   = MoveA3()
+        self.__load_s0   = LoadS0()
+        self.__inc_s0    = IncrementS0()
+        self.__store_s0  = StoreS0()
+        self.__write_stk = WriteOnStack()
 
     def __construct_charger(self, ra=0, \
                                   s0=0, \
@@ -76,7 +77,7 @@ class BF_Parser():
 
             elif instruction == '+':
                 # just for debugging
-                self.__construct_charger(ra=self.__load_s0.get_vaddr(), s4=self.__charger.get_vaddr())
+                self.__construct_charger(ra=self.__write_stk.get_vaddr(), s4=self.__charger.get_vaddr())
                 rop_chain += self.__charger.print_gadget()
 
             elif instruction == '-':
