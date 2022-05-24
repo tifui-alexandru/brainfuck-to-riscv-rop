@@ -111,20 +111,20 @@ class BF_Parser():
                 rop_chain += self.__copy_a3.print_gadget()
 
                 self.__construct_charger(ra=self.__load_s0.get_vaddr(), \
-                                         s1=self.__charger.get_vaddr(), \
+                                         s1=self.__mov_a0_s0.get_vaddr(), \
                                          s4=self.__inc_s0.get_vaddr(), \
                                          s11=increment \
                                         )
                 rop_chain += self.__charger.print_gadget()
 
-                self.__construct_charger(ra=self.__init_a3.get_vaddr(), \
-                                         s7=pointer_start, \
-                                         s4=self.__mov_a0_s0.get_vaddr() \
-                                        )
-                rop_chain += self.__charger.print_gadget()
-
                 self.__construct_mov_a0_s0(ra=self.__charger.get_vaddr())
                 rop_chain += self.__mov_a0_s0.print_gadget()
+
+                self.__construct_charger(ra=self.__init_a3.get_vaddr(), \
+                                         s4=self.__charger.get_vaddr(), \
+                                         s7=pointer_start \
+                                        )
+                rop_chain += self.__charger.print_gadget()
 
                 self.__construct_charger(ra=self.__restore_a3.get_vaddr(), \
                                          s0=backup_addr - 0x40, \
