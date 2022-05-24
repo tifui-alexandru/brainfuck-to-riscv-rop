@@ -10,6 +10,7 @@ class BF_Parser():
         self.__copy_a3    = CopyA3()
         self.__restore_a3 = RestoreA3()
         self.__mov_a0_s0  = MovA0_S0()
+        self.__and_a0_s0  = AndA0_S0()
 
         # jop gadget objects
         self.__init_a3    = InitializeA3()

