@@ -31,8 +31,9 @@ class BF_Parser():
                                   s11=0 \
                             ):
 
+        offset = [0]
         data = [s11, s10, s9, s8, s7, s6, s5, s4, s3, s2, s1, s0, ra]
-        self.__charger.set_stack_frame(data)
+        self.__charger.set_stack_frame(offset + data)
 
     def __construct_copy_a3(self, ra=0, s0=0):
         data = [s0, ra]
