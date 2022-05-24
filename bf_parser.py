@@ -113,7 +113,7 @@ class BF_Parser():
                 self.__construct_charger(ra=self.__load_s0.get_vaddr(), \
                                          s1=self.__mov_a0_s0.get_vaddr(), \
                                          s4=self.__inc_s0.get_vaddr(), \
-                                         s7=self.__inc_a3.get_vaddr(), \
+                                         s7=self.__charger.get_vaddr(), \
                                          s11=increment \
                                         )
                 rop_chain += self.__charger.print_gadget()
