@@ -64,7 +64,7 @@ class BF_Parser():
                 total_len += charger_frame_sz
 
             elif instruction == '+' or instruction == '-':
-                total_len += 3 * charger_frame_sz + write_mem_frame_sz + read_mem_frame_sz + mov_a0_s0_frame_sz
+                total_len += 5 * charger_frame_sz + write_mem_frame_sz + read_mem_frame_sz + mov_a0_s0_frame_sz
 
             elif instruction == '.':
                 pass
@@ -111,18 +111,27 @@ class BF_Parser():
                 rop_chain += self.__copy_a3.print_gadget()
 
                 self.__construct_charger(ra=self.__load_s0.get_vaddr(), \
-                                         s1=self.__mov_a0_s0.get_vaddr(), \
+                                         s1=self.__charger.get_vaddr(), \
                                          s4=self.__inc_s0.get_vaddr(), \
-                                         s7=self.__charger.get_vaddr(), \
                                          s11=increment \
                                         )
                 rop_chain += self.__charger.print_gadget()
 
-                self.__construct_mov_a0_s0(ra=self.__restore_a3.get_vaddr(), \
+                self.__construct_charger(ra=self.__init_a3.get_vaddr(), \
+                                         s7=pointer_start, \
+                                         s4=self.__mov_a0_s0.get_vaddr() \
+                                        )
+                rop_chain += self.__charger.print_gadget()
+
+                self.__construct_mov_a0_s0(ra=self.__charger.get_vaddr(), \
                                            s0=backup_addr - 0x40, \
                                            s3=1 \
                                           )
                 rop_chain += self.__mov_a0_s0.print_gadget()
+
+                self.__construct_charger(ra=self.__restore_a3.get_vaddr(), \
+                                         s7=self.__charger.get_vaddr(), \
+                                        )
 
                 self.__construct_restore_a3(ra=self.__mov_s0_a0.get_vaddr(), \
                                             s2=1 \
