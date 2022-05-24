@@ -123,13 +123,12 @@ class BF_Parser():
                                         )
                 rop_chain += self.__charger.print_gadget()
 
-                self.__construct_mov_a0_s0(ra=self.__charger.get_vaddr(), \
-                                           s0=backup_addr - 0x40, \
-                                           s3=1 \
-                                          )
+                self.__construct_mov_a0_s0(ra=self.__charger.get_vaddr())
                 rop_chain += self.__mov_a0_s0.print_gadget()
 
                 self.__construct_charger(ra=self.__restore_a3.get_vaddr(), \
+                                         s0=backup_addr - 0x40, \
+                                         s3=1, \
                                          s7=self.__charger.get_vaddr(), \
                                         )
 
