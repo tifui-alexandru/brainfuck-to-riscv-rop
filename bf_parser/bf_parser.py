@@ -148,18 +148,33 @@ class BF_Parser():
 
                 backup_addr = initial_sp + 0x8 + \
                               len(rop_chain) + \
-                              self.__charger.get_frame_size() + \
-                              self.__copy_a3.get_frame_size() + \
+                              2 * self.__charger.get_frame_size() + \
+                              2 * self.__copy_a3.get_frame_size() + \
                               0x58 # offset for s1
 
-                print(f"\nSelf modifying ROP address: {hex(backup_addr)}\n")
+                backup_addr_2 = initial_sp + 0x8 + \
+                               len(rop_chain) + \
+                               3 * self.__charger.get_frame_size() + \
+                               2 * self.__copy_a3.get_frame_size() + \
+                               self.__ecall.get_frame_size() + \
+                               self.__restore_a3.get_frame_size() + \
+                               0x10 # offset for s0
+
+                print(f"\nSelf modifying ROP address: {hex(backup_addr)}")
+                print(f"Second Self modifying ROP address: {hex(backup_addr_2)}\n")
 
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
-                                                            s0 = backup_addr, \
+                                                            s0=backup_addr, \
                                                             s4=self.__charger.get_vaddr()
                                                             )
 
-                rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())
+                rop_chain += self.__copy_a3.construct_frame(ra=self.__charger.get_vaddr())
+
+                rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
+                                                            s0=backup_addr_2 \
+                                                            )
+
+                rop_chain += self.__copy_a3.construct_frame(ra=self.__init_args.get_vaddr())                       
 
                 rop_chain += self.__charger.construct_frame(ra=self.__init_args.get_vaddr(), \
                                                             s1=addr_mask, \
