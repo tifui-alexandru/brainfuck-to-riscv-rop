@@ -1,4 +1,4 @@
-from bf_parser import *
+from bf_parser.bf_parser import *
 
 p = BF_Parser("++>--<")
 
