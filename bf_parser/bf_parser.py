@@ -128,7 +128,9 @@ class BF_Parser():
                                                                s2=1 \
                                                                )
                 
-                rop_chain += self.__and_a3_s0.construct_frame(ra=self.__store_a0.get_vaddr()) # will contain address written at runtime
+                rop_chain += self.__and_a3_s0.construct_frame(ra=self.__store_a0.get_vaddr(), \
+                                                              s0=0xffffffffffffffff # will contain address written at runtime
+                                                              ) 
 
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
 
