@@ -87,7 +87,8 @@ class BF_Parser():
             elif instruction == '+' or instruction == '-':
                 increment = 1 if instruction == '+' else -1
 
-                backup_addr = initial_sp + len(rop_chain) + \
+                backup_addr = initial_sp + 0x8 + \
+                              len(rop_chain) + \
                               3 * self.__charger.get_frame_size() + \
                               self.__copy_a3.get_frame_size() + \
                               self.__mov_a0_s0.get_frame_size() + \
@@ -126,7 +127,7 @@ class BF_Parser():
                                                                )
                 
                 rop_chain += self.__and_a3_s0.construct_frame(ra=self.__store_a0.get_vaddr(), \
-                                                              s0=0xffffffff00000000 # will contain address written at runtime
+                                                              s0=0x3f00000000 # will contain address written at runtime
                                                               ) 
 
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
