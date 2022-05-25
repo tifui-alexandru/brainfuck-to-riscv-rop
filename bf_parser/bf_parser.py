@@ -96,7 +96,7 @@ class BF_Parser():
 
                 rop_chain += self.__charger.construct_frame(ra=self.__load_s0.get_vaddr(), \
                                                             s1=self.__mov_a0_s0.get_vaddr(), \
-                                                            s4=self.__inc_a3.get_vaddr(), \
+                                                            s4=self.__inc_s0.get_vaddr(), \
                                                             s7=self.__store_s0.get_vaddr(), \
                                                             s8=self.__charger.get_vaddr() - 0x6d6, \
                                                             s11=increment
