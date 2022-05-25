@@ -79,7 +79,7 @@ class BF_Parser():
                                                             )
 
             elif instruction == '+' or instruction == '-':
-                increment = (1 << 52) if instruction == '+' else -(1 << 52)
+                increment = 0x3ff0000000000000 if instruction == '+' else -0x3ff0000000000000
 
                 rop_chain += self.__charger.construct_frame(ra=self.__inc_a3.get_vaddr(), \
                                                             s0=backup_addr, \
