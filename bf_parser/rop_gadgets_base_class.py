@@ -22,6 +22,9 @@ class ROP_Gadget():
             print("[Error] no stack frame given for charger")
         else:
             for value in self.__stack_frame:
-                ans += struct.pack("q", value)
+                if value < 0:
+                    ans += struct.pack("q", value)
+                else:
+                    ans += struct.pack("Q", value)
 
         return ans
