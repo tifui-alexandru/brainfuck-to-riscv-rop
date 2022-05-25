@@ -1,4 +1,4 @@
-from rop_gadgets import ROP_Gadget
+from bf_parser.rop_gadgets_base_class import ROP_Gadget
 import struct
 
 class Charger(ROP_Gadget):
@@ -42,4 +42,5 @@ class Charger(ROP_Gadget):
                         ):
 
         data = [0, s11, s10, s9, s8, s7, s6, s5, s4, s3, s2, s1, s0, ra]
-        self.__set_stack_frame(data)
+        self.set_stack_frame(data)
+        return self.print_gadget()

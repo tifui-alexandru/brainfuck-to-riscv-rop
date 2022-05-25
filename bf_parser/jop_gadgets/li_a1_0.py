@@ -1,4 +1,4 @@
-from jop_gadgets import JOP_Gadget
+from bf_parser.jop_gadgets_base_class import JOP_Gadget
 
 class LiA1_0(JOP_Gadget):
     '''

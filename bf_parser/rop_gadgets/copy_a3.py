@@ -1,4 +1,4 @@
-from rop_gadgets import ROP_Gadget
+from bf_parser.rop_gadgets_base_class import ROP_Gadget
 
 class CopyA3(ROP_Gadget):
     '''
@@ -14,4 +14,5 @@ class CopyA3(ROP_Gadget):
 
     def construct_frame(self, ra=0, s0=0):
         data = [s0, ra]
-        self.__set_stack_frame(data)
+        self.set_stack_frame(data)
+        return self.print_gadget()

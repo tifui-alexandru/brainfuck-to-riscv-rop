@@ -12,7 +12,7 @@ class ROP_Gadget():
     def get_frame_size(self):
         return self.__frame_size
 
-    def __set_stack_frame(self, stack_frame):
+    def set_stack_frame(self, stack_frame):
         self.__stack_frame = stack_frame
 
     def print_gadget(self):

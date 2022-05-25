@@ -1,4 +1,4 @@
-from jop_gadgets import JOP_Gadget
+from bf_parser.jop_gadgets_base_class import JOP_Gadget
 
 class InitializeA3(JOP_Gadget):
     '''
