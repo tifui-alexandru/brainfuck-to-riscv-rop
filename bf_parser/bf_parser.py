@@ -75,8 +75,6 @@ class BF_Parser():
         rop_chain = self.__charger.print_vaddr() # charger address that overrides $ra
         rop_chain += self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
 
-        currnet_sp = initial_sp
-
         for instruction in self.__bf_code:
             if instruction == '>' or instruction == '<':
                 increment = 0x8 if instruction == '>' else -0x8
@@ -86,16 +84,15 @@ class BF_Parser():
                                                             s4=self.__charger.get_vaddr() \
                                                             )
 
-                currnet_sp += self.get_instruction_len(instruction)
-
             elif instruction == '+' or instruction == '-':
                 increment = 1 if instruction == '+' else -1
 
-                backup_addr = currnet_sp + 3 * self.__charger.get_frame_size() + \
-                                           self.__copy_a3.get_frame_size() + \
-                                           self.__mov_a0_s0.get_frame_size() + \
-                                           self.__restore_a3.get_frame_size() + \
-                                           0x10 # offset for s0
+                backup_addr = initial_sp + len(rop_chain) + \
+                              3 * self.__charger.get_frame_size() + \
+                              self.__copy_a3.get_frame_size() + \
+                              self.__mov_a0_s0.get_frame_size() + \
+                              self.__restore_a3.get_frame_size() + \
+                              0x10 # offset for s0
 
                 print(f"\nSelf modifying ROP address: {hex(backup_addr)}\n")
 
@@ -133,8 +130,6 @@ class BF_Parser():
                                                               ) 
 
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
-
-                currnet_sp += self.get_instruction_len(instruction)
 
             elif instruction == '.':
                 pass
