@@ -52,9 +52,9 @@ class BF_Parser():
                    self.__store_a0.get_frame_size()
 
         elif instruction == '.' or instruction == ',':
-            length = 2 * self.__charger.get_frame_size() + \
+            length = 3 * self.__charger.get_frame_size() + \
                      self.__ecall.get_frame_size() + \
-                     self.__copy_a3.get_frame_size() + \
+                     2 * self.__copy_a3.get_frame_size() + \
                      self.__restore_a3.get_frame_size() + \
                      self.__and_a3_s0.get_frame_size()
 
