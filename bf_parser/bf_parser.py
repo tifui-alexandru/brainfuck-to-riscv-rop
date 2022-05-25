@@ -164,14 +164,14 @@ class BF_Parser():
                 print(f"Second Self modifying ROP address: {hex(backup_addr_2)}\n")
 
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
-                                                            s0=backup_addr, \
-                                                            s4=self.__charger.get_vaddr()
+                                                            s0=backup_addr \
                                                             )
 
                 rop_chain += self.__copy_a3.construct_frame(ra=self.__charger.get_vaddr())
 
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
-                                                            s0=backup_addr_2 \
+                                                            s0=backup_addr_2, \
+                                                            s4=self.__charger.get_vaddr()
                                                             )
 
                 rop_chain += self.__copy_a3.construct_frame(ra=self.__init_args.get_vaddr())                       
