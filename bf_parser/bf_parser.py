@@ -14,6 +14,8 @@ from bf_parser.rop_gadgets.mov_a0_s0 import *
 from bf_parser.rop_gadgets.and_a3_s0 import *
 from bf_parser.rop_gadgets.charger import *
 from bf_parser.rop_gadgets.store_a0 import*
+from bf_parser.rop_gadgets.init_args import *
+from bf_parser.rop_gadgets.ecall import *
 
 class BF_Parser():
     def __init__(self, bf_code):
@@ -33,8 +35,9 @@ class BF_Parser():
         self.__load_s0    = LoadS0()
         self.__inc_s0     = IncrementS0()
         self.__store_s0   = StoreS0()
-        self.__mov_s0_a0  = MovS0_A0()
-        self.__li_a1_0    = LiA1_0()
+        self.__init_a7    = InitializeA5_A7()
+        self.__init_args  = InitializeArgs()
+        self.__ecall      = Ecall()
 
     def get_instruction_len(self, instruction):
         if instruction == '>' or instruction == '<':
@@ -48,11 +51,17 @@ class BF_Parser():
                    self.__and_a3_s0.get_frame_size() + \
                    self.__store_a0.get_frame_size()
 
-        elif instruction == '.':
-            return 0
+        elif instruction == '.' or instruction == ',':
+            length = 2 * self.__charger.get_frame_size() + \
+                     self.__ecall.get_frame_size() + \
+                     self.__copy_a3.get_frame_size() + \
+                     self.__restore_a3.get_frame_size() + \
+                     self.__and_a3_s0.get_frame_size()
 
-        elif instruction == ',':
-            return 0
+            if instruction == ',':
+                length += self.__store_a0.get_frame_size()
+
+            return length
 
         elif instruction == '[':
             return 0
@@ -71,6 +80,8 @@ class BF_Parser():
         return total_len
 
     def parse(self, pointer_start, initial_sp):
+        addr_mask = 0x3fffffffff # to restore the address using only the lower 32 bits
+
         # initialize a3 to point to the middle of the tape
         rop_chain = self.__charger.print_vaddr() # charger address that overrides $ra
         rop_chain += self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
@@ -122,21 +133,55 @@ class BF_Parser():
                                                               )
 
                 rop_chain += self.__restore_a3.construct_frame(ra=self.__and_a3_s0.get_vaddr(), \
-                                                               s0=0x3fffffffff, \
+                                                               s0=addr_mask, \
                                                                s2=1 \
                                                                )
                 
                 rop_chain += self.__and_a3_s0.construct_frame(ra=self.__store_a0.get_vaddr(), \
-                                                              s0=0x3f00000000 # will contain address written at runtime
+                                                              s0=addr_mask # will contain address written at runtime
                                                               ) 
 
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
 
-            elif instruction == '.':
-                pass
+            elif instruction == '.' or instruction == ',':
+                file_descriptor = 1 if instruction == '.' else 0
 
-            elif instruction == ',':
-                pass
+                backup_addr = initial_sp + 0x8 + \
+                              len(rop_chain) + \
+                              self.__charger.get_frame_size() + \
+                              self.__copy_a3.get_frame_size() + \
+                              0x58 # offset for s1
+
+                print(f"\nSelf modifying ROP address: {hex(backup_addr)}\n")
+
+                rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
+                                                            s0 = backup_addr, \
+                                                            s4=self.__charger.get_vaddr()
+                                                            )
+
+                rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())
+
+                rop_chain += self.__charger.construct_frame(ra=self.__init_args.get_vaddr(), \
+                                                            s1=addr_mask, \
+                                                            s2=1, \
+                                                            s6=1, \
+                                                            s7=self.__ecall.get_vaddr(), \
+                                                            s10=file_descriptor \
+                                                            )
+
+                rop_chain += self.__ecall.construct_frame(ra=self.__restore_a3.get_vaddr())
+
+                rop_chain += self.__restore_a3.construct_frame(ra=self.__and_a3_s0.get_vaddr(), \
+                                                               s0=addr_mask \
+                                                               )          
+
+                if instruction == '.':
+                    rop_chain += self.__and_a3_s0.construct_frame(ra=self.__charger.get_vaddr())
+                else:
+                    rop_chain += self.__and_a3_s0.construct_frame(ra=self.__store_a0.get_vaddr(), \
+                                                                  s0=addr_mask # will contain address written at runtime
+                                                                  )   
+                    rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
 
             elif instruction == '[':
                 pass

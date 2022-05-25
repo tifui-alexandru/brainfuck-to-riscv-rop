@@ -12,6 +12,7 @@ class StoreA0(ROP_Gadget):
     ld s3, 0x8(sp)
     snez a0, a5
     addi sp, sp, 0x30
+    jr ra
     '''
     def __init__(self):
         super().__init__(0x4443a, 0x30)
