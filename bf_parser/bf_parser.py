@@ -145,6 +145,7 @@ class BF_Parser():
 
             elif instruction == '.' or instruction == ',':
                 file_descriptor = 1 if instruction == '.' else 0
+                syscall_no = 64 if instruction == '.' else 63
 
                 backup_addr = initial_sp + 0x8 + \
                               len(rop_chain) + \
@@ -171,10 +172,11 @@ class BF_Parser():
 
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
                                                             s0=backup_addr_2, \
-                                                            s4=self.__charger.get_vaddr()
+                                                            s4=self.__charger.get_vaddr(), \
+                                                            s5=syscall_no \
                                                             )
 
-                rop_chain += self.__copy_a3.construct_frame(ra=self.__init_args.get_vaddr())                       
+                rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())                       
 
                 rop_chain += self.__charger.construct_frame(ra=self.__init_args.get_vaddr(), \
                                                             s1=addr_mask, \
