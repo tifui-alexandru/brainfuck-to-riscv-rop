@@ -161,6 +161,7 @@ class BF_Parser():
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
                                                             s0=backup_addr, \
                                                             s4=self.__charger.get_vaddr() \
+                                                            s5=syscall_no, \
                                                             )
 
                 rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())    
@@ -168,7 +169,6 @@ class BF_Parser():
                 rop_chain += self.__charger.construct_frame(ra=self.__init_args.get_vaddr(), \
                                                             s1=addr_mask, \
                                                             s2=1, \
-                                                            s5=syscall_no, \
                                                             s6=1, \
                                                             s7=self.__ecall.get_vaddr(), \
                                                             s10=file_descriptor
@@ -214,6 +214,7 @@ class BF_Parser():
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
                                                             s0=backup_addr_2, \
                                                             s4=self.__charger.get_vaddr(), \
+                                                            s5=syscall_no, \
                                                             )
 
                 rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())    
@@ -221,7 +222,6 @@ class BF_Parser():
                 rop_chain += self.__charger.construct_frame(ra=self.__init_args.get_vaddr(), \
                                                             s1=addr_mask, \
                                                             s2=1, \
-                                                            s5=syscall_no, \
                                                             s6=1, \
                                                             s7=self.__ecall.get_vaddr(), \
                                                             s10=file_descriptor
