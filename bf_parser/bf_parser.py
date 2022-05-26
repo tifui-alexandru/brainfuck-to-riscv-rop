@@ -162,6 +162,7 @@ class BF_Parser():
                                                             s0=backup_addr, \
                                                             s4=self.__charger.get_vaddr(), \
                                                             s5=syscall_no, \
+                                                            s7=self.__charger.get_vaddr()
                                                             )
 
                 rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())    
@@ -215,6 +216,7 @@ class BF_Parser():
                                                             s0=backup_addr_2, \
                                                             s4=self.__charger.get_vaddr(), \
                                                             s5=syscall_no, \
+                                                            s7=self.__charger.get_vaddr()
                                                             )
 
                 rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())    
