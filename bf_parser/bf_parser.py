@@ -77,24 +77,31 @@ class BF_Parser():
     def parse(self, pointer_start, initial_sp):
         addr_mask = 0x3fffffffff # to restore the address using only the lower 32 bits
 
+        current_sp = pointer_start # acts like a program counter
+
         # initialize a3 to point to the middle of the tape
         rop_chain = self.__charger.print_vaddr() # charger address that overrides $ra
         rop_chain += self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
+
+        current_sp += self.__charger.get_frame_size()
 
         for instruction in self.__bf_code:
             if instruction == '>' or instruction == '<':
                 increment = 0x8 if instruction == '>' else -0x8
 
+                # construct rop chain
                 rop_chain += self.__charger.construct_frame(ra=self.__inc_a3.get_vaddr(), \
                                                             s1=increment, \
                                                             s4=self.__charger.get_vaddr() \
                                                             )
 
+                # advance sp
+                current_sp += self.get_instruction_len(instruction)
+
             elif instruction == '+' or instruction == '-':
                 increment = 1 if instruction == '+' else -1
 
-                backup_addr = initial_sp + 0x8 + \
-                              len(rop_chain) + \
+                backup_addr = current_sp + \
                               3 * self.__charger.get_frame_size() + \
                               self.__copy_a3.get_frame_size() + \
                               self.__mov_a0_s0.get_frame_size() + \
@@ -103,6 +110,7 @@ class BF_Parser():
 
                 print(f"\nSelf modifying ROP address: {hex(backup_addr)}\n")
 
+                #construct rop chain
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
                                                             s0=backup_addr \
                                                             )
@@ -138,18 +146,21 @@ class BF_Parser():
 
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
 
+                # advance sp
+                current_sp += self.get_instruction_len(instruction)
+
             elif instruction == '.' or instruction == ',':
                 file_descriptor = 1 if instruction == '.' else 0
                 syscall_no = 64 if instruction == '.' else 63
 
-                backup_addr = initial_sp + 0x8 + \
-                              len(rop_chain) + \
+                backup_addr = current_sp + \
                               self.__charger.get_frame_size() + \
                               self.__copy_a3.get_frame_size() + \
                               0x58 # offset for s1
 
                 print(f"\nSelf modifying ROP address:   {hex(backup_addr)}")
 
+                # construct rop chain
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
                                                             s0=backup_addr, \
                                                             s4=self.__charger.get_vaddr(), \
@@ -160,11 +171,11 @@ class BF_Parser():
                 rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())    
 
                 rop_chain += self.__charger.construct_frame(ra=self.__init_args.get_vaddr(), \
-                                                            s1=addr_mask, \
                                                             s2=1, \
                                                             s6=1, \
                                                             s7=self.__ecall.get_vaddr(), \
-                                                            s10=file_descriptor
+                                                            s10=file_descriptor, \
+                                                            s1=addr_mask # will contain address written at runtime
                                                             )
 
                 rop_chain += self.__ecall.construct_frame(ra=self.__restore_a3.get_vaddr(), \
@@ -176,6 +187,9 @@ class BF_Parser():
                                                                )
 
                 rop_chain += self.__and_a3_s0.construct_frame(ra=self.__charger.get_vaddr())
+
+                # advance sp
+                current_sp += self.get_instruction_len(instruction)
 
             elif instruction == '[':
                 pass
