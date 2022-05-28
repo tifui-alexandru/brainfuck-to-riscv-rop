@@ -52,19 +52,11 @@ class BF_Parser():
                    self.__store_a0.get_frame_size()
 
         elif instruction == '.' or instruction == ',':
-            length = 2 * self.__charger.get_frame_size() + \
-                     self.__ecall.get_frame_size() + \
-                     1 * self.__copy_a3.get_frame_size() + \
-                     self.__restore_a3.get_frame_size() + \
-                     self.__and_a3_s0.get_frame_size()
-
-            if instruction == ',':
-                length += \
-                            self.__store_a0.get_frame_size() + \
-                            self.__charger.get_frame_size() + \
-                            self.__copy_a3.get_frame_size()
-
-            return length
+            return 2 * self.__charger.get_frame_size() + \
+                   self.__ecall.get_frame_size() + \
+                   self.__copy_a3.get_frame_size() + \
+                   self.__restore_a3.get_frame_size() + \
+                   self.__and_a3_s0.get_frame_size()
 
         elif instruction == '[':
             return 0
@@ -146,9 +138,9 @@ class BF_Parser():
 
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
 
-            elif instruction == '.':
-                file_descriptor = 1
-                syscall_no = 64
+            elif instruction == '.' or instruction == ',':
+                file_descriptor = 1 if instruction == '.' else 0
+                syscall_no = 64 if instruction == '.' else 63
 
                 backup_addr = initial_sp + 0x8 + \
                               len(rop_chain) + \
@@ -184,64 +176,6 @@ class BF_Parser():
                                                                )
 
                 rop_chain += self.__and_a3_s0.construct_frame(ra=self.__charger.get_vaddr())
-
-            elif instruction == ',':
-                file_descriptor = 0
-                syscall_no = 63
-
-                backup_addr_1 = initial_sp + 0x8 + \
-                              len(rop_chain) + \
-                              2 * self.__charger.get_frame_size() + \
-                              2 * self.__copy_a3.get_frame_size() + \
-                              0x48 # offset for s1
-
-                backup_addr_2 = initial_sp + 0x8 + \
-                                len(rop_chain) + \
-                                3 * self.__charger.get_frame_size() + \
-                                2 * self.__copy_a3.get_frame_size() + \
-                                self.__ecall.get_frame_size() + \
-                                self.__restore_a3.get_frame_size() + \
-                                0x10 # offset for s0
-
-                print(f"\nFirst Self modifying ROP address:   {hex(backup_addr_1)}")
-                print(f"Second Self modifying ROP address:  {hex(backup_addr_2)}")
-
-                rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
-                                                            s0=backup_addr_1 \
-                                                            )
-
-                rop_chain += self.__copy_a3.construct_frame(ra=self.__charger.get_vaddr())
-
-                rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
-                                                            s0=backup_addr_2, \
-                                                            s4=self.__charger.get_vaddr(), \
-                                                            s5=syscall_no, \
-                                                            s7=self.__charger.get_vaddr()
-                                                            )
-
-                rop_chain += self.__copy_a3.construct_frame(ra=self.__init_a7.get_vaddr())    
-
-                rop_chain += self.__charger.construct_frame(ra=self.__init_args.get_vaddr(), \
-                                                            s1=addr_mask, \
-                                                            s2=1, \
-                                                            s6=1, \
-                                                            s7=self.__ecall.get_vaddr(), \
-                                                            s10=file_descriptor
-                                                            )
-
-                rop_chain += self.__ecall.construct_frame(ra=self.__restore_a3.get_vaddr(), \
-                                                          s0=backup_addr_1 - 0x40 \
-                                                          )
-                                        
-                rop_chain += self.__restore_a3.construct_frame(ra=self.__and_a3_s0.get_vaddr(), \
-                                                               s0=addr_mask 
-                                                               )
-
-                rop_chain += self.__and_a3_s0.construct_frame(ra=self.__store_a0.get_vaddr(), \
-                                                              s0=addr_mask
-                                                              )
-                                                            
-                rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
 
             elif instruction == '[':
                 pass
