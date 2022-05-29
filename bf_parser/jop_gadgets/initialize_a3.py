@@ -7,4 +7,4 @@ class InitializeA3(JOP_Gadget):
     jalr s4
     '''
     def __init__(self):
-        super().__init__(0x260f6)
+        super().__init__(0x29ef0)

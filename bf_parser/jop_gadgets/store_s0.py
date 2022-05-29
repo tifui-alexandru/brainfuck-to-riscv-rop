@@ -8,4 +8,4 @@ class StoreS0(JOP_Gadget):
     jalr tp, 0x6d6(s8)
     '''
     def __init__(self):
-        super().__init__(0x68da6)
+        super().__init__(0x693c6)

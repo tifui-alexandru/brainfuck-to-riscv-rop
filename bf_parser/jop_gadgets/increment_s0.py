@@ -14,4 +14,4 @@ class IncrementS0(JOP_Gadget):
     jalr s1
     '''
     def __init__(self):
-        super().__init__(0x209ea)
+        super().__init__(0x21756)
