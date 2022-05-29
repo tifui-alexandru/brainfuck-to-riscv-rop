@@ -6,4 +6,4 @@ class LiA1_0(JOP_Gadget):
     jalr s1
     '''
     def __init__(self):
-        super().__init__(0x225b4)
+        super().__init__(0x21850)

