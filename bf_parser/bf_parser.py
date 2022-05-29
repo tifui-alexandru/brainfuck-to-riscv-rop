@@ -72,6 +72,8 @@ class BF_Parser():
         for instruction in self.__bf_code:
             total_len += self.get_instruction_len(instruction)
 
+        total_len += self.__charger.get_frame_size() # for exit(0) syscall
+
         return total_len
 
     def parse(self, pointer_start, initial_sp):
@@ -196,5 +198,14 @@ class BF_Parser():
 
             elif instruction == ']':
                 pass
+
+        # end with an exit syscall
+        exit_syscall_no = 93
+        rop_chain += self.__charger.construct_frame(ra=self.__init_a7.get_vaddr(), \
+                                                    s2=1, \
+                                                    s4=self.__init_args.get_vaddr(), \
+                                                    s5=exit_syscall_no, \
+                                                    s7=self.__ecall.get_vaddr() \
+                                                    )
 
         return rop_chain

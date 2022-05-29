@@ -1,6 +1,6 @@
 from bf_parser.bf_parser import *
 
-p = BF_Parser(",.")
+p = BF_Parser(",+>,+>,+.<.<.")
 
 offset = b"A" * 32 # offset until stack smash ; added for debugging
 tape = b"\x00" * 1024 # the brainfuck tape
