@@ -107,7 +107,7 @@ class BF_Parser():
                 rop_chain += self.__copy_a3.construct_frame(ra=self.__charger.get_vaddr())
 
                 rop_chain += self.__charger.construct_frame(ra=self.__inc_a3.get_vaddr(), \
-                                                            s1=-0x60, \
+                                                            s1=-0x24, \
                                                             s4=self.__charger.get_vaddr() \
                                                             )
 

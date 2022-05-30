@@ -11,4 +11,4 @@ class InitializeA5_A7(JOP_Gadget):
     jalr s4
     '''
     def __init__(self):
-        super().__init__(0x29184)
+        super().__init__(0x29f68)

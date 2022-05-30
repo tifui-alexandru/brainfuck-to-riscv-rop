@@ -10,7 +10,7 @@ class CopyA3(ROP_Gadget):
     jr ra
     '''
     def __init__(self):
-        super().__init__(0x381da, 0x10)
+        super().__init__(0x1643a, 0x10)
 
     def construct_frame(self, ra=0, s0=0):
         data = [s0, ra]

@@ -21,7 +21,7 @@ class Charger(ROP_Gadget):
     '''
 
     def __init__(self):
-        super().__init__(0x479a6, 0x70)
+        super().__init__(0x48022, 0x70)
 
     def print_vaddr(self):
         return struct.pack("q", self.get_vaddr())

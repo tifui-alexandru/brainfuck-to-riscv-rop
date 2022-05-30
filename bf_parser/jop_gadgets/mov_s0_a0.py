@@ -12,4 +12,4 @@ class MovS0_A0(JOP_Gadget):
     jalr s7
     '''
     def __init__(self):
-        super().__init__(0x144f4)
+        super().__init__(0x14584)
