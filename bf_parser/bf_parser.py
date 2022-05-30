@@ -7,6 +7,7 @@ from bf_parser.jop_gadgets.store_s0 import *
 from bf_parser.jop_gadgets.load_s0 import *
 from bf_parser.jop_gadgets.li_a1_0 import *
 from bf_parser.jop_gadgets.mov_s0_a0 import *
+from bf_parser.jop_gadgets.init_args import *
 
 from bf_parser.rop_gadgets.copy_a3 import *
 from bf_parser.rop_gadgets.restore_a3 import *
@@ -14,12 +15,13 @@ from bf_parser.rop_gadgets.mov_a0_s0 import *
 from bf_parser.rop_gadgets.and_a3_s0 import *
 from bf_parser.rop_gadgets.charger import *
 from bf_parser.rop_gadgets.store_a0 import*
-from bf_parser.jop_gadgets.init_args import *
 from bf_parser.rop_gadgets.ecall import *
+from bf_parser.rop_gadgets.move_sp import *
 
 class BF_Parser():
     def __init__(self, bf_code):
         self.__bf_code = bf_code
+        self.__addr_mask = 0x3fffffffff # to restore the address using only the lower 32 bits
 
         # rop gadget objects
         self.__charger    = Charger()
@@ -28,6 +30,7 @@ class BF_Parser():
         self.__mov_a0_s0  = MovA0_S0()
         self.__and_a3_s0  = AndA3_S0()
         self.__store_a0   = StoreA0()
+        self.__move_sp    = MoveSP()
 
         # jop gadget objects
         self.__init_a3    = InitializeA3()
@@ -67,14 +70,15 @@ class BF_Parser():
         elif instruction == ']':
             return 0
 
-    def parse(self, pointer_start, rop_pc):
-        addr_mask = 0x3fffffffff # to restore the address using only the lower 32 bits
+    def __parse_no_jumps(self, bf_code, sp):
+        # parse brainfuck code with no conditional jumps
 
-        # initialize a3 to point to the middle of the tape
-        rop_chain = self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
-        rop_pc += self.__charger.get_frame_size()
+        # provide frame for unconditional jump to this address
+        rop_chain = self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
+        rop_chain_start = sp
+        rop_chain_end = sp
 
-        for instruction in self.__bf_code:
+        for instruction in bf_code:
             if instruction == '>' or instruction == '<':
                 increment = 0x8 if instruction == '>' else -0x8
 
@@ -85,12 +89,12 @@ class BF_Parser():
                                                             )
 
                 # advance sp
-                rop_pc += self.__get_instruction_len(instruction)
+                rop_chain_end += self.__get_instruction_len(instruction)
 
             elif instruction == '+' or instruction == '-':
                 increment = 1 if instruction == '+' else -1
 
-                backup_addr = rop_pc + \
+                backup_addr = rop_chain_end + \
                               3 * self.__charger.get_frame_size() + \
                               self.__copy_a3.get_frame_size() + \
                               self.__mov_a0_s0.get_frame_size() + \
@@ -125,24 +129,24 @@ class BF_Parser():
                                                               )
 
                 rop_chain += self.__restore_a3.construct_frame(ra=self.__and_a3_s0.get_vaddr(), \
-                                                               s0=addr_mask, \
+                                                               s0= self.__addr_mask, \
                                                                s2=1 \
                                                                )
                 
                 rop_chain += self.__and_a3_s0.construct_frame(ra=self.__store_a0.get_vaddr(), \
-                                                              s0=addr_mask # will contain address written at runtime
+                                                              s0= self.__addr_mask # will contain address written at runtime
                                                               ) 
 
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
 
                 # advance sp
-                rop_pc += self.__get_instruction_len(instruction)
+                rop_chain_end += self.__get_instruction_len(instruction)
 
             elif instruction == '.' or instruction == ',':
                 file_descriptor = 1 if instruction == '.' else 0
                 syscall_no = 64 if instruction == '.' else 63
 
-                backup_addr = rop_pc + \
+                backup_addr = rop_chain_end + \
                               self.__charger.get_frame_size() + \
                               self.__copy_a3.get_frame_size() + \
                               0x58 # offset for s1
@@ -164,7 +168,7 @@ class BF_Parser():
                                                             s6=1, \
                                                             s7=self.__ecall.get_vaddr(), \
                                                             s10=file_descriptor, \
-                                                            s1=addr_mask # will contain address written at runtime
+                                                            s1= self.__addr_mask # will contain address written at runtime
                                                             )
 
                 rop_chain += self.__ecall.construct_frame(ra=self.__restore_a3.get_vaddr(), \
@@ -172,19 +176,29 @@ class BF_Parser():
                                                           )
                                         
                 rop_chain += self.__restore_a3.construct_frame(ra=self.__and_a3_s0.get_vaddr(), \
-                                                               s0=addr_mask 
+                                                               s0= self.__addr_mask 
                                                                )
 
                 rop_chain += self.__and_a3_s0.construct_frame(ra=self.__charger.get_vaddr())
 
                 # advance sp
-                rop_pc += self.__get_instruction_len(instruction)
+                rop_chain_end += self.__get_instruction_len(instruction)
 
-            elif instruction == '[':
-                pass
+        return rop_chain_start, rop_chain_end, rop_chain
 
-            elif instruction == ']':
-                pass
+    def jump_to_rop(self, rop_chain_start):
+        return self.__charger.construct_frame(ra=self.__move_sp.get_vaddr(), \
+                                              s0=rop_chain_start+0x50 \
+                                              )
+
+    def parse(self, pointer_start, sp):
+        # initialize a3 to point to the middle of the tape
+        rop_chain = self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
+        sp += self.__charger.get_frame_size()
+       
+        # no "[" or "]" for now
+        start, end, chain = self.__parse_no_jumps(self.__bf_code, sp)
+        rop_chain += chain
 
         # end with an exit syscall
         exit_syscall_no = 93
