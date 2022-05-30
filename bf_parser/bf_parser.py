@@ -147,7 +147,7 @@ class BF_Parser():
                               self.__copy_a3.get_frame_size() + \
                               0x58 # offset for s1
 
-                print(f"\nSelf modifying ROP address:   {hex(backup_addr)}")
+                # print(f"\nSelf modifying ROP address:   {hex(backup_addr)}")
 
                 # construct rop chain
                 rop_chain += self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
