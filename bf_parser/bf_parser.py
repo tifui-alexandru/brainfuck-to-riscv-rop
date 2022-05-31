@@ -17,6 +17,7 @@ from bf_parser.rop_gadgets.charger import *
 from bf_parser.rop_gadgets.store_a0 import*
 from bf_parser.rop_gadgets.ecall import *
 from bf_parser.rop_gadgets.move_sp import *
+from bf_parser.rop_gadgets.pop_s0 import *
 
 class BF_Parser():
     def __init__(self, bf_code):
@@ -31,6 +32,7 @@ class BF_Parser():
         self.__and_a3_s0  = AndA3_S0()
         self.__store_a0   = StoreA0()
         self.__move_sp    = MoveSP()
+        self.__pop_s0     = PopS0()
 
         # jop gadget objects
         self.__init_a3    = InitializeA3()
@@ -74,9 +76,13 @@ class BF_Parser():
         # parse brainfuck code with no conditional jumps
 
         # provide frame for unconditional jump to this address
-        rop_chain = self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
+        rop_chain = self.__pop_s0(ra=self.__move_sp.get_vaddr(), \
+                                  s0=sp + 0x60 \
+                                  )
+
+        rop_chain += self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
         rop_chain_start = sp
-        rop_chain_end = sp
+        rop_chain_end = sp # to modify -------------------------------------------------
 
         for instruction in bf_code:
             if instruction == '>' or instruction == '<':
