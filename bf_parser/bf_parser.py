@@ -186,9 +186,10 @@ class BF_Parser():
 
         return rop_chain_start, rop_chain_end, rop_chain
 
-    def jump_to_rop(self, rop_chain_start):
+    def jump_to_rop(self, rop_chain_start, current_sp):
+        sp_diff = rop_chain_start - current_sp + 0x50
         return self.__charger.construct_frame(ra=self.__move_sp.get_vaddr(), \
-                                              s0=rop_chain_start+0x50 \
+                                              s0=sp_diff \
                                               )
 
     def parse(self, pointer_start, sp):
