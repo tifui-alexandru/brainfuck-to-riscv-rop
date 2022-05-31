@@ -18,6 +18,8 @@ from bf_parser.rop_gadgets.store_a0 import*
 from bf_parser.rop_gadgets.ecall import *
 from bf_parser.rop_gadgets.move_sp import *
 from bf_parser.rop_gadgets.pop_s0 import *
+from bf_parser.rop_gadgets.mov_a0_a4 import *
+from bf_parser.rop_gadgets.mov_a4_a3 import *
 
 class BF_Parser():
     def __init__(self, bf_code):
@@ -33,6 +35,8 @@ class BF_Parser():
         self.__store_a0   = StoreA0()
         self.__move_sp    = MoveSP()
         self.__pop_s0     = PopS0()
+        self.__mov_a4_a3  = MOVA4_A3()
+        self.__mov_a0_a4  = MOVA0_A4()
 
         # jop gadget objects
         self.__init_a3    = InitializeA3()
@@ -57,7 +61,9 @@ class BF_Parser():
                    self.__restore_a3.get_frame_size() + \
                    self.__mov_a0_s0.get_frame_size() + \
                    self.__and_a3_s0.get_frame_size() + \
-                   self.__store_a0.get_frame_size()
+                   self.__store_a0.get_frame_size() + \
+                   self.__mov_a0_a4.get_frame_size() + \
+                   self.__mov_a4_a3.get_frame_size()
 
         elif instruction == '.' or instruction == ',':
             return 2 * self.__charger.get_frame_size() + \
@@ -105,6 +111,8 @@ class BF_Parser():
                               self.__copy_a3.get_frame_size() + \
                               self.__mov_a0_s0.get_frame_size() + \
                               self.__restore_a3.get_frame_size() + \
+                              self.__mov_a4_a3.get_frame_size() + \
+                              self.__mov_a0_a4.get_frame_size() + \
                               0x10 # offset for s0
 
                 # print(f"\nSelf modifying ROP address: {hex(backup_addr)}\n")
@@ -118,8 +126,12 @@ class BF_Parser():
 
                 rop_chain += self.__charger.construct_frame(ra=self.__inc_a3.get_vaddr(), \
                                                             s1=-0x24, \
-                                                            s4=self.__charger.get_vaddr() \
+                                                            s4=self.__mov_a4_a3.get_vaddr() \
                                                             )
+                
+                rop_chain += self.__mov_a4_a3.construct_frame(ra=self.__mov_a0_a4.get_vaddr())
+
+                rop_chain += self.__mov_a0_a4.construct_frame(ra=self.__charger.get_vaddr())
 
                 rop_chain += self.__charger.construct_frame(ra=self.__load_s0.get_vaddr(), \
                                                             s1=self.__mov_a0_s0.get_vaddr(), \
@@ -140,7 +152,7 @@ class BF_Parser():
                                                                )
                 
                 rop_chain += self.__and_a3_s0.construct_frame(ra=self.__store_a0.get_vaddr(), \
-                                                              s0= self.__addr_mask # will contain address written at runtime
+                                                              s0=self.__addr_mask # will contain address written at runtime
                                                               ) 
 
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())

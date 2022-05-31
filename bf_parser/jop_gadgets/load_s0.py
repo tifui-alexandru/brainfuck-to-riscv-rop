@@ -2,7 +2,7 @@ from bf_parser.jop_gadgets_base_class import JOP_Gadget
 
 class LoadS0(JOP_Gadget):
     '''
-    fld	fs0, 0x24(a3)
+    fld	fs0, 0x24(a0)
     addi a5, sp, 0x8
     li a4, 0
     li a7, 0
