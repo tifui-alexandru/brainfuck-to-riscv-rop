@@ -192,8 +192,12 @@ class BF_Parser():
                                               )
 
     def parse(self, pointer_start, sp):
+        # provide frame for the first jump to this address
+        rop_chain = self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
+        sp += self.__move_sp.get_frame_size()
+
         # initialize a3 to point to the middle of the tape
-        rop_chain = self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
+        rop_chain += self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__charger.get_vaddr(), s7=pointer_start)
         sp += self.__charger.get_frame_size()
        
         # no "[" or "]" for now
