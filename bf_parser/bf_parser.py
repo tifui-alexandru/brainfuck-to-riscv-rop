@@ -76,13 +76,13 @@ class BF_Parser():
         # parse brainfuck code with no conditional jumps
 
         # provide frame for unconditional jump to this address
-        rop_chain = self.__pop_s0(ra=self.__move_sp.get_vaddr(), \
+        rop_chain = self.__pop_s0.construct_frame(ra=self.__move_sp.get_vaddr(), \
                                   s0=sp + 0x60 \
                                   )
 
         rop_chain += self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
         rop_chain_start = sp
-        rop_chain_end = sp # to modify -------------------------------------------------
+        rop_chain_end = sp + self.__pop_s0.get_frame_size() + self.__move_sp.get_frame_size()
 
         for instruction in bf_code:
             if instruction == '>' or instruction == '<':
