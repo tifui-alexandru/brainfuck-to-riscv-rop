@@ -7,7 +7,7 @@ ra_offset = 152
 payload_max_size = 1000000
 tape_size = 30000
 
-initial_sp = 0x3fffffef90
+initial_sp = 0x3fffffef70
 tape_start = initial_sp - tape_size
 rop_chain_start = initial_sp - payload_max_size
 
