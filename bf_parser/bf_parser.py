@@ -25,6 +25,10 @@ class BF_Parser():
     def __init__(self, bf_code):
         self.__bf_code = bf_code
         self.__addr_mask = 0x3fffffffff # to restore the address using only the lower 32 bits
+        
+        # key   -> opening bracket's position
+        # value -> closing bracket's position
+        self.__brackets = dict()
 
         # rop gadget objects
         self.__charger    = Charger()
@@ -78,7 +82,7 @@ class BF_Parser():
         elif instruction == ']':
             return 0
 
-    def __parse_no_jumps(self, bf_code, sp):
+    def __parse_no_jumps(self, start_section, end_section, sp):
         # parse brainfuck code with no conditional jumps
 
         # provide frame for unconditional jump to this address
@@ -87,10 +91,9 @@ class BF_Parser():
                                   )
 
         rop_chain += self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
-        rop_chain_start = sp
-        rop_chain_end = sp + self.__pop_s0.get_frame_size() + self.__move_sp.get_frame_size()
+        new_sp = sp + self.__pop_s0.get_frame_size() + self.__move_sp.get_frame_size()
 
-        for instruction in bf_code:
+        for instruction in self.__bf_code[start_section : end_section]:
             if instruction == '>' or instruction == '<':
                 increment = 0x8 if instruction == '>' else -0x8
 
@@ -101,7 +104,7 @@ class BF_Parser():
                                                             )
 
                 # advance sp
-                rop_chain_end += self.__get_instruction_len(instruction)
+                new_sp += self.__get_instruction_len(instruction)
 
             elif instruction == '+' or instruction == '-':
                 increment = 1 if instruction == '+' else -1
@@ -158,13 +161,13 @@ class BF_Parser():
                 rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
 
                 # advance sp
-                rop_chain_end += self.__get_instruction_len(instruction)
+                new_sp += self.__get_instruction_len(instruction)
 
             elif instruction == '.' or instruction == ',':
                 file_descriptor = 1 if instruction == '.' else 0
                 syscall_no = 64 if instruction == '.' else 63
 
-                backup_addr = rop_chain_end + \
+                backup_addr = new_sp + \
                               self.__charger.get_frame_size() + \
                               self.__copy_a3.get_frame_size() + \
                               0x58 # offset for s1
@@ -200,9 +203,41 @@ class BF_Parser():
                 rop_chain += self.__and_a3_s0.construct_frame(ra=self.__charger.get_vaddr())
 
                 # advance sp
-                rop_chain_end += self.__get_instruction_len(instruction)
+                new_sp += self.__get_instruction_len(instruction)
 
-        return rop_chain_start, rop_chain_end, rop_chain
+        return new_sp, rop_chain
+
+    def __match_brackets(self):
+        brackets_stack = []
+
+        for idx, instruction in enumerate(self.__bf_code):
+            if instruction == '[':
+                brackets_stack.append(idx)
+            elif instruction == ']':
+                if len(brackets_stack) == 0:
+                    print("[Error] Invalid brainfuck code")
+                    exit(0)
+                
+                self.__brackets[brackets_stack[-1]] = idx
+                brackets_stack.pop()
+
+        if len(brackets_stack) > 0:
+            print("[Error] Invalid brainfuck code")
+            exit(0)
+
+    def __parse_jump(self, instruction):
+        pass
+
+    def __parse_with_jumps(self, start_section, end_section, sp):
+        for idx in range(start_section, end_section):
+            if self.__bf_code[idx] == '[':
+                sp1, chain1 = self.__parse_no_jumps(start_section, idx, sp)
+                sp2, chain2 = self.__parse_with_jumps(idx + 1, self.__brackets[idx], sp1 + self.__get_instruction_len('['))
+                sp3, chain3 = self.__parse_with_jumps(self.__brackets[idx] + 1, end_section, sp2 + self.__get_instruction_len(']'))
+
+                return sp3, chain1 + self.__parse_jump('[') + chain2 + self.__parse_jump(']') + chain3
+        
+        return self.__parse_no_jumps(start_section, end_section, sp)
 
     def jump_to_rop(self, rop_chain_start):
         return self.__charger.construct_frame(ra=self.__move_sp.get_vaddr(), \
@@ -218,8 +253,11 @@ class BF_Parser():
         rop_chain += self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__pop_s0.get_vaddr(), s7=pointer_start)
         sp += self.__charger.get_frame_size()
        
-        # no "[" or "]" for now
-        start, end, chain = self.__parse_no_jumps(self.__bf_code, sp)
+        # match brackets
+        self.__match_brackets()
+
+        # parse the actual instructions
+        _, chain = self.__parse_with_jumps(0, len(self.__bf_code), sp)       
         rop_chain += chain
 
         # end with an exit syscall
