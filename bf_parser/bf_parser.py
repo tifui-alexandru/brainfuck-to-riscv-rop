@@ -109,7 +109,7 @@ class BF_Parser():
             elif instruction == '+' or instruction == '-':
                 increment = 1 if instruction == '+' else -1
 
-                backup_addr = rop_chain_end + \
+                backup_addr = new_sp + \
                               3 * self.__charger.get_frame_size() + \
                               self.__copy_a3.get_frame_size() + \
                               self.__mov_a0_s0.get_frame_size() + \
