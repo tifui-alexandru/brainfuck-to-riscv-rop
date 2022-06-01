@@ -98,14 +98,18 @@ class BF_Parser():
         rop_chain += self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
         new_sp = sp + self.__pop_s0.get_frame_size() + self.__move_sp.get_frame_size()
 
-        for instruction in self.__bf_code[start_section : end_section]:
+        for idx, instruction in enumerate(self.__bf_code[start_section : end_section]):
+            next_gadget_addr = self.__charger.get_vaddr()
+            if idx == end_section - start_section - 1:
+                next_gadget_addr = self.__pop_s0.get_vaddr()
+
             if instruction == '>' or instruction == '<':
                 increment = 0x8 if instruction == '>' else -0x8
 
                 # construct rop chain
                 rop_chain += self.__charger.construct_frame(ra=self.__inc_a3.get_vaddr(), \
                                                             s1=increment, \
-                                                            s4=self.__charger.get_vaddr() \
+                                                            s4=next_gadget_addr \
                                                             )
 
                 # advance sp
@@ -163,7 +167,7 @@ class BF_Parser():
                                                               s0=self.__addr_mask # will contain address written at runtime
                                                               ) 
 
-                rop_chain += self.__store_a0.construct_frame(ra=self.__charger.get_vaddr())
+                rop_chain += self.__store_a0.construct_frame(ra=next_gadget_addr)
 
                 # advance sp
                 new_sp += self.__get_instruction_len(instruction)
@@ -205,7 +209,7 @@ class BF_Parser():
                                                                s0= self.__addr_mask 
                                                                )
 
-                rop_chain += self.__and_a3_s0.construct_frame(ra=self.__charger.get_vaddr())
+                rop_chain += self.__and_a3_s0.construct_frame(ra=next_gadget_addr)
 
                 # advance sp
                 new_sp += self.__get_instruction_len(instruction)
