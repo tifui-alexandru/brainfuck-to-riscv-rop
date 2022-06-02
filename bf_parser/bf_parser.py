@@ -273,14 +273,14 @@ class BF_Parser():
         rop_chain += self.__mov_a0_s0.construct_frame(ra=self.__charger.get_vaddr())
 
         rop_chain += self.__charger.construct_frame(ra=self.__beqz_a0.get_vaddr(), \
-                                                    s0=nonzero_sp - zero_sp, \
+                                                    s0=zero_sp + 0x50 + self.__pop_s0.get_frame_size(), \
                                                     s2=1, \
                                                     s3=1, \
                                                     s7=self.__move_sp.get_vaddr() \
                                                     )
 
         rop_chain += self.__beqz_a0.construct_frame(ra=self.__add_a0_s0.get_vaddr(), \
-                                                    a0=zero_sp + 0x50 + self.__pop_s0.get_frame_size() \
+                                                    a0=nonzero_sp - zero_sp \
                                                     )
 
         rop_chain += self.__add_a0_s0.construct_frame(ra=self.__mov_s0_a0.get_vaddr())
