@@ -26,7 +26,9 @@ from bf_parser.rop_gadgets.add_a0_s0 import *
 
 class BF_Parser():
     def __init__(self, bf_code):
-        self.__bf_code = bf_code
+        # trim bf code (only valid instruction make into the parsable code)
+        self.__bf_code = [ch for ch in bf_code if ch in {'>', '<', '.', ',', '+', '-', '[', ']'}]
+
         self.__addr_mask = 0x3fffffffff # to restore the address using only the lower 32 bits
         
         # key   -> opening bracket's position
