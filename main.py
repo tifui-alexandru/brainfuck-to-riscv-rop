@@ -1,5 +1,5 @@
-from mimetypes import init
 from bf_parser.bf_parser import *
+import argparse
 
 # calculate offsets and constants
 
@@ -12,8 +12,12 @@ tape_start = initial_sp - tape_size
 rop_chain_start = initial_sp - payload_max_size
 
 # parse the brainfuck code
+parser = argparse.ArgumentParser()
+parser.add_argument(dest="bf_code", help="path to the brainfuck source code")
+args = parser.parse_args()
 
-bf_code = input("Paste the Brainfuck code to compile:\n")
+with open(args.bf_code, "r") as fin:
+    bf_code = fin.read()
 
 p = BF_Parser(bf_code)
 
