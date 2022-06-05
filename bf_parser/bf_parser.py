@@ -96,6 +96,9 @@ class BF_Parser():
                    self.__add_a0_s0.get_frame_size()
 
     def __parse_no_jumps(self, start_section, end_section, sp):
+        if start_section >= end_section:
+            return sp, b""
+
         # parse brainfuck code with no conditional jumps
 
         # provide frame for unconditional jump to this address
@@ -290,6 +293,9 @@ class BF_Parser():
         return rop_chain
 
     def __parse_with_jumps(self, start_section, end_section, sp):
+        if start_section >= end_section:
+            return sp, b""
+
         for idx in range(start_section, end_section):
             if self.__bf_code[idx] == '[':
                 sp1, chain1 = self.__parse_no_jumps(start_section, idx, sp)
@@ -317,7 +323,10 @@ class BF_Parser():
         sp += self.__move_sp.get_frame_size()
 
         # initialize a3 to point to the middle of the tape
-        rop_chain += self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), s4=self.__pop_s0.get_vaddr(), s7=pointer_start)
+        rop_chain += self.__charger.construct_frame(ra=self.__init_a3.get_vaddr(), \
+                                                    s4=self.__pop_s0.get_vaddr(), \
+                                                    s7=pointer_start \
+                                                    )
         sp += self.__charger.get_frame_size()
        
         # match brackets
