@@ -108,7 +108,7 @@ class BF_Parser():
 
         for idx, instruction in enumerate(self.__bf_code[start_section : end_section]):
             next_gadget_addr = self.__charger.get_vaddr()
-            if idx == end_section - start_section - 1 and end_section != len(self.__bf_code):
+            if idx == end_section - start_section - 1:
                 next_gadget_addr = self.__pop_s0.get_vaddr()
 
             if instruction == '>' or instruction == '<':
@@ -324,10 +324,16 @@ class BF_Parser():
         self.__match_brackets()
 
         # parse the actual instructions
-        _, chain = self.__parse_with_jumps(0, len(self.__bf_code), sp)       
+        sp, chain = self.__parse_with_jumps(0, len(self.__bf_code), sp)       
         rop_chain += chain
 
-        # end with an exit syscall
+        # end with an exit syscall and provide movesp frame to jump to it
+        rop_chain += self.__pop_s0.construct_frame(ra=self.__move_sp.get_vaddr(),
+                                                   s0=sp + self.__pop_s0.get_frame_size() + 0x50
+                                                   )
+        
+        rop_chain += self.__move_sp.construct_frame(ra=self.__charger.get_vaddr())
+
         exit_syscall_no = 93
         rop_chain += self.__charger.construct_frame(ra=self.__init_a7.get_vaddr(), \
                                                     s2=1, \
